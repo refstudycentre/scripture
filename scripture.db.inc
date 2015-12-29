@@ -28,13 +28,28 @@ function scripture_get_translation($tid) {
  * Retrieve verse from the db based on vid
  */
 function scripture_get_verse($vid, $translation = NULL) {
-  if (empty($translation))
+
+  // Try to load the default translation if it is not specified
+  if (empty($translation)) {
     $translation = variable_get('scripture_default_translation', NULL);
-  
-  if (!empty($translation))
-    return db_select('lw_verses', 'v')->fields('v')->condition('vid', $vid)->condition('translation', $translation)->range(0, 1)->execute()->fetchAssoc();
-  else
-    return array();
+  }
+
+  // Check if a translation is specified
+  if (empty($translation)) {
+
+    drupal_set_message("The default translation is not specified. Don't know which text to load from database.", 'error', FALSE);
+    return FALSE;
+
+  } else {
+    return db_select('lw_verses', 'v')
+      ->fields('v')
+      ->condition('vid', $vid)
+      ->condition('translation', $translation)
+      ->range(0, 1)
+      ->execute()
+      ->fetchAssoc();
+  }
+
 }
 
 /**

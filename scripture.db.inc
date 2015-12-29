@@ -142,78 +142,30 @@ function scripture_save_subverses($vid, $translation, $new) {
  * Retrieve all verses in a range from the db based on vid
  */
 function scripture_get_verses_between($from_vid, $to_vid, $translation = NULL) {
-  
-  if (empty($translation))
+
+  // Try to load the default translation if it is not specified
+  if (empty($translation)) {
     $translation = variable_get('scripture_default_translation', NULL);
-  
-  $from_verse = scripture_get_verse($from_vid, $translation);
-  $to_verse = scripture_get_verse($to_vid, $translation);
-  $book = scripture_get_book($from_verse);
-  
-  if (!empty($translation) && !empty($book)) {
-    
-    if ($from_verse['chapternum'] == $to_verse['chapternum']) {
-      
-      // The query is much simpler if the range is within one chapter:
-      $range_condition = db_and()
-        ->condition('chapternum', $from_verse['chapternum'])
-        ->condition('versenum', $from_verse['versenum'], '>=')
-        ->condition('versenum', $to_verse['versenum'], '<=');
-      
-    } else {
-      
-      /*
-       * The range spans multiple chapters
-       * building this condition:
-       * (
-       *   (
-       *     chapternum > from_chapternum &&
-       *     chapternum < to_chapternum
-       *   ) ||
-       *   (
-       *     chapternum = from_chapternum &&
-       *     versenum >= from_versenum
-       *   ) ||
-       *   (
-       *     chapternum = to_chapternum &&
-       *     versenum <= to_versenum
-       *   )
-       * )
-       */
-      
-      $middle_chapters = db_and()
-        ->condition('chapternum', $from_verse['chapternum'], '>')
-        ->condition('chapternum', $to_verse['chapternum'], '<');
-      
-      $first_chapter = db_and()
-        ->condition('chapternum', $from_verse['chapternum'])
-        ->condition('versenum', $from_verse['versenum'], '>=');
-      
-      $last_chapter = db_and()
-        ->condition('chapternum', $to_verse['chapternum'])
-        ->condition('versenum', $to_verse['versenum'], '<=');
-      
-      $range_condition = db_or()
-        ->condition($middle_chapters)
-        ->condition($first_chapter)
-        ->condition($last_chapter);
-      
-    }
-    
-    return db_select('lw_verses', 'v')
-    ->fields('v')
-    ->condition('translation', $translation)
-    ->condition('booknum', $book['booknum'])
-    ->condition($range_condition)
-    ->orderBy('chapternum', 'ASC')
-    ->orderBy('versenum', 'ASC')
-    ->execute()
-    ->fetchAllAssoc('vid');
-    
-  
-  } else {
-    return array();
   }
+
+  // Check if a translation is specified
+  if (empty($translation)) {
+
+    drupal_set_message("The default translation is not specified. Don't know which text to load from database.", 'error', FALSE);
+    return FALSE;
+
+  } else {
+
+    return db_select('lw_verses', 'v')
+      ->fields('v')
+      ->condition('translation', $translation)
+      ->condition('vid', array($from_vid, $to_vid), 'BETWEEN')
+      ->orderBy('vid', 'ASC')// ordering by versenum does not work, because there are alphanumeric verses in some translations
+      ->execute()
+      ->fetchAllAssoc('vid');
+
+  }
+
 }
 
 /**

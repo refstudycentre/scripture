@@ -179,7 +179,7 @@ function scripture_prepare(&$values, $display) {
 function scripture_view($values, $display) {
   $output = array();
 
-  if (empty($values['from_verse']) || empty($values['to_verse']) || empty($values['sid'])) {
+  if (empty($values['from_verse'])) {
 
     drupal_set_message("Cannot view verses, as they were not properly loaded.", "error", FALSE);
 
@@ -313,8 +313,8 @@ function scripture_decode_range($str) {
   $sid = NULL;
 
   $matches = array();
-  if (preg_match('/^(\d+)(-(\d+)|\.(\w))$/', $str, $matches)) {
-    // looks like the right shape, i.e. either 1234-5678 or 1234b
+  if (preg_match('/^(\d+)(-(\d+)|\.(\w))?$/', $str, $matches)) {
+    // looks like the right shape, i.e. either 1234 or 1234-5678 or 1234b
 
     if (!empty($matches[1])) {
 
@@ -338,7 +338,7 @@ function scripture_decode_range($str) {
 
     } // else invalid starting verse
 
-  }
+  } // else it didn't match the regular expression
 
   return array(
     'from_vid' => $from_vid,

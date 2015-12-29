@@ -275,3 +275,25 @@ function scripture_preview($values, $display = array()) {
   scripture_prepare($values,$display);
   return scripture_view($values,$display);
 }
+
+
+/**
+ * Provide a measure of quality of match, given the verse range for a node and the verse range for a query
+ */
+function scripture_match_quality($field_start_vid, $field_end_vid, $node_sid = NULL, $query_start_vid, $query_end_vid, $query_sid = NULL) {
+
+  static $weight_q = variable_get("scripture_match_quality_weight_query", 1);
+  static $weight_e = variable_get("scripture_match_quality_weight_entity", 1);
+
+  // TODO: support subverses?
+
+  // FIXME: using the verse ids is crude, because they are not gauranteed to be equally spaced. Although in general, they are.
+
+  $overlap_size = max(0, min($field_end_vid, $query_end_vid) - max($field_start_vid - $query_start_vid));
+  $query_match_quality = $overlap_size / ($query_end_vid - $query_start_vid);
+  $entity_match_quality = $overlap_size / ($field_end_vid - $field_start_vid);
+
+  return $weight_q * $query_match_quality + $weight_e * $entity_match_quality;
+
+}
+

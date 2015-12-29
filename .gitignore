@@ -1,0 +1,4 @@
+
+# Ignore IntelliJ stuff
+.idea
+*.iml

@@ -239,7 +239,7 @@ function scripture_view($values, $display) {
 /**
  * Generate a human-readable verse range
  */
-function scripture_str_verseref($from_verse, $to_verse, $sid = NULL, $bookname = NULL, $translation_id = NULL) {
+function scripture_str_verseref($from_verse, $to_verse, $sid = NULL, $bookname = NULL, $translation_abbr = NULL) {
   
   $str = "";
   
@@ -258,8 +258,8 @@ function scripture_str_verseref($from_verse, $to_verse, $sid = NULL, $bookname =
     $str = "{$bookname} {$from_verse['chapternum']}:{$from_verse['versenum']} - {$to_verse['chapternum']}:{$to_verse['versenum']}";
   }
   
-  if (!empty($translation_id)) {
-    $translation = scripture_get_translation($translation_id);
+  if (!empty($translation_abbr)) {
+    $translation = scripture_get_translation($translation_abbr);
     $str .= " (<abbr title='{$translation['name']}'>".strtoupper($translation['abbr'])."</abbr>)";
   }
   

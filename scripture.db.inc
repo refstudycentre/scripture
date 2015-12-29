@@ -20,8 +20,8 @@ function scripture_get_translations() {
 /**
  * Get the info for a translation based on translation id
  */
-function scripture_get_translation($tid) {
-  return db_select('lw_translations', 't')->fields('t')->condition('abbr',$tid)->execute()->fetchAssoc();
+function scripture_get_translation($abbr) {
+  return db_select('lw_translations', 't')->fields('t')->condition('abbr',$abbr)->execute()->fetchAssoc();
 }
 
 /**

@@ -244,9 +244,10 @@ function scripture_shorten($a, $b = "", $maxwords = 5) {
 
 /**
  * Convenience function for previewing verses
+ * TODO: get a better name for this function??
  */
-function scripture_preview($values) {
-  $display = array(
+function scripture_preview($values, $display = array()) {
+  $display += array(
     'show_ref'=>TRUE,
     'show_text'=>SCRIPTURE_SHOW_TEXT_ALL,
   );

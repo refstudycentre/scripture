@@ -1,0 +1,255 @@
+<?php
+
+module_load_include('inc','scripture','scripture.field');
+module_load_include('inc','scripture','scripture.db');
+module_load_include('inc','scripture','scripture.element');
+
+/**
+ * Implements hook_permission().
+ */
+function scripture_permission() {
+  $permissions = array();
+  
+  $permissions['scripture_admin'] = array(
+    'title' => t('Scripture admin'),
+    'description' => t('Administer translations and subverses of the Scripture module'),
+  );
+   
+  return $permissions;
+}
+
+/**
+ * Implements hook_menu().
+ * https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_menu/7
+ */
+function scripture_menu() {
+  $items = array();
+  
+  $items['admin/structure/scripture'] = array(
+    'title'            => 'Scripture',
+    'type'             => MENU_NORMAL_ITEM,
+    'description'      => 'Manage the Scripture module',
+    'page callback'    => 'scripture_callback_status',
+    'access callback'  => 'user_access',
+    'access arguments' => array('scripture_admin'),
+    'file'             => 'scripture.admin.inc',
+  );
+  
+  $items['admin/structure/scripture/status'] = array(
+    'title'         => 'Status',
+    'description'   => 'View status and statistics',
+    'type'          => MENU_DEFAULT_LOCAL_TASK,
+    'weight'        => 10,
+    'page callback' => 'scripture_callback_status',
+    'access callback'  => 'user_access',
+    'access arguments' => array('scripture_admin'),
+    'file'          => 'scripture.admin.inc',
+  );
+  
+  $items['admin/structure/scripture/translations'] = array(
+    'title'            => 'Translations',
+    'description'      => 'Manage installed translations',
+    'type'             => MENU_LOCAL_TASK,
+    'weight'           => 20,
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('scripture_callback_translations'),
+    'access callback'  => 'user_access',
+    'access arguments' => array('scripture_admin'),
+    'file'             => 'scripture.admin.inc',
+  );
+  
+  $items['admin/structure/scripture/subverses'] = array(
+    'title'            => 'Subverses',
+    'description'      => 'Manage subverses',
+    'type'             => MENU_LOCAL_TASK,
+    'weight'           => 30,
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('scripture_callback_subverses'),
+    'access callback'  => 'user_access',
+    'access arguments' => array('scripture_admin'),
+    'file'             => 'scripture.admin.inc',
+  );
+  
+  return $items;
+}
+
+/**
+ * Implements hook_element_info().
+ * https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_element_info/7
+ * Declare a FORM API element for the verse picker
+ */
+function scripture_element_info() {
+  return array(
+    'scripture_verse_picker' => array(
+      '#input'            => TRUE,
+      '#process'          => array('scripture_verse_picker_process'),
+      '#element_validate' => array('scripture_verse_picker_validate'),
+      '#theme'            => array('scripture_verse_picker'),
+      '#theme_wrappers'   => array('form_element'),
+      '#tree'             => TRUE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_theme($existing, $type, $theme, $path).
+ * https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_theme/7
+ * Registers the module's theme implementations
+ */
+function scripture_theme($existing, $type, $theme, $path) {
+  return array(
+    'scripture_verse_picker' => array(
+      'render element' => 'element',
+    ),
+    'scripture_inline_wrapper' => array(
+      'render element' => 'element',
+    ),
+  );
+}
+
+/**
+ * Update preview for verse(s) via AJAX
+ */
+function scripture_ajax_preview_verse($form, $form_state) {
+  return 'MOO';
+}
+
+/**
+ * Load pieces of scripture from database
+ */
+function scripture_prepare(&$values, $display) {
+
+  if (SCRIPTURE_SHOW_TEXT_TRUNC == $display['show_text'] || $display['show_ref']) {
+    // load first and last verse text in range
+    $values['from_verse'] = scripture_get_verse($values['from_vid'], $values['translation']);
+    $values['to_verse'] = scripture_get_verse($values['to_vid'], $values['translation']);
+  }
+  
+  if (SCRIPTURE_SHOW_TEXT_ALL == $display['show_text']) {
+    // load entire verse range
+    $values['all_verses'] = scripture_get_verses_between($values['from_vid'], $values['to_vid'], $values['translation']);
+  }
+  
+  if (SCRIPTURE_SHOW_TEXT_NO != $display['show_text'] && !empty($values['sid'])) {
+    // load the subverse
+    $values['subverse'] = scripture_get_subverse($values['from_vid'], $values['sid'], $values['translation']);
+  }
+  
+}
+
+/**
+ * View pieces of scripture from database
+ */
+function scripture_view($values, $display) {
+  $output = array();
+  
+  if ($display['show_ref']) {
+    $output['ref'] = array(
+      '#prefix' => '<cite>',
+      '#markup' => scripture_str_verseref($values['from_verse'], $values['to_verse'], $values['sid'], NULL, $values['translation']),
+      '#suffix' => '</cite>'
+    );
+  }
+  
+  switch ($display['show_text']) {
+    case SCRIPTURE_SHOW_TEXT_TRUNC:
+      // if there is a subverse, show only that
+      if (!empty($values['subverse'])) {
+        $markup = $values['subverse'];
+      } else {
+        $markup = scripture_shorten($values['from_verse']['versetext'], $values['to_verse']['versetext']);
+      }
+      $output['text'] = array(
+        '#prefix' => '<q>',
+        '#markup' => $markup,
+        '#suffix' => '</q>'
+      );
+      break;
+    case SCRIPTURE_SHOW_TEXT_ALL:
+      
+      // pull all of the verses into one long string
+      $alltext = "";
+      foreach ($values['all_verses'] as $v) {
+        $alltext .= $v->versetext . " ";
+      }
+      
+      // if there is a subverse, emphasize it
+      if (!empty($values['subverse'])) {
+        // find the subverse and surround it with tags
+        $alltext = str_replace($values['subverse'], "<strong>{$values['subverse']}</strong>", $alltext);
+      }
+      
+      $output['text'] = array(
+        '#prefix' => '<blockquote>',
+        '#markup' => substr($alltext, 0, - 1),
+        '#suffix' => '</blockquote>'
+      );
+      
+      break;
+  }
+  
+  return $output;
+  
+}
+
+/**
+ * Generate a human-readable verse range
+ */
+function scripture_str_verseref($from_verse, $to_verse, $sid = NULL, $bookname = NULL, $translation_id = NULL) {
+  
+  $str = "";
+  
+  if (empty($bookname)) {
+    $book = scripture_get_book($from_verse);
+    $bookname = $book['bookname'];
+  }
+
+  if ($from_verse['vid'] == $to_verse['vid']) {
+    if (empty($sid)) {
+      $str = "{$book['bookname']} {$from_verse['chapternum']}:{$from_verse['versenum']}";
+    } else {
+      $str = "{$book['bookname']} {$from_verse['chapternum']}:{$from_verse['versenum']}.{$sid}";
+    }
+  } else {
+    $str = "{$book['bookname']} {$from_verse['chapternum']}:{$from_verse['versenum']} - {$to_verse['chapternum']}:{$to_verse['versenum']}";
+  }
+  
+  if (!empty($translation_id)) {
+    $translation = scripture_get_translation($translation_id);
+    $str .= " (<abbr title='{$translation['name']}'>".strtoupper($translation['abbr'])."</abbr>)";
+  }
+  
+  return $str;
+
+}
+
+/**
+ * Takes the first few words from string $a and the last few words from string $b and concatenates them with an ellips
+ */
+function scripture_shorten($a, $b = "", $maxwords = 5) {
+
+  $a = explode(" ", $a, $maxwords + 1);
+  unset($a[$maxwords]);
+  $a = implode(" ", $a) . " &#8230;";
+
+  if (! empty($b)) {
+    $b = explode(" ", $b);
+    $b = array_slice($b, - $maxwords);
+    $b = " " . implode(" ", $b);
+  }
+
+  return $a . $b;
+
+}
+
+/**
+ * Convenience function for previewing verses
+ */
+function scripture_preview($values) {
+  $display = array(
+    'show_ref'=>TRUE,
+    'show_text'=>SCRIPTURE_SHOW_TEXT_ALL,
+  );
+  scripture_prepare($values,$display);
+  return scripture_view($values,$display);
+}

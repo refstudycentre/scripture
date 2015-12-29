@@ -1,0 +1,212 @@
+<?php
+
+
+/* 
+ * DATABASE SCHEMA
+ * https://api.drupal.org/api/drupal/includes!database!schema.inc/group/schemaapi/7
+ */
+
+/**
+ * Implements hook_schema()
+ * https://api.drupal.org/api/drupal/modules!system!system.api.php/function/hook_schema/7
+ */
+function scripture_schema() {
+  /*
+   * NB: This hook ... cannot rely on the .module file being loaded or hooks being known
+   * 
+   * Development: Use the devel module or drush to quickly uninstall and re-install the
+   * module, thereby dropping and re-creating the database tables defined here. To update
+   * the database without losing information (between stable version releases), read this
+   * https://api.drupal.org/api/drupal/modules%21system%21system.api.php/function/hook_update_N/7
+   * and follow this guide: http://rapiddg.com/blog-post/updating-drupal-modules-schema
+   */
+  return array(
+    'lw_translations' => array(
+      'description' => 'Bible translations',
+      'fields' => array(
+        'abbr' => array(
+          'description' => 'Translation abbreviation, e.g. "esv", "aov"',
+          'type' => 'varchar',
+          'not null' => true,
+          'length' => 8,
+        ),
+        'name' => array(
+          'description' => 'Full name of the translation, e.g. “English Standard Version”',
+          'type' => 'varchar',
+          'not null' => true,
+          'length' => 100,
+        ),
+        'lang' => array(
+          'description' => 'The drupal language code which this translation corresponds to',
+          'type' => 'varchar',
+          'not null' => true,
+          'default' => 'und',
+          'length' => 12,
+        ),
+      ),
+      'primary key' => array('abbr'),
+    ),
+    'lw_verses' => array(
+      'description' => 'Bible verses',
+      'fields' => array(
+        'vid' => array(
+          'description' => 'verse ID; unique within translation; all verses with this ID has the same textual content, but in different translations',
+          'type' => 'int',
+          'not null' => true,
+          'unsigned' => true,
+        ),
+        'translation' => array(
+          'description' => 'Bible translation this verse originates from',
+          'type' => 'varchar',
+          'length' => '8',
+          'not null' => true,
+        ),
+        'booknum' => array(
+          'description' => 'Position of bible book in the translation (1-66)',
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => true,
+          'unsigned' => true,
+        ),
+        'chapternum' => array(
+          'description' => 'Position of chapter in book (1-150)',
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => true,
+          'unsigned' => true,
+        ),
+        'versenum' => array(
+          'description' => 'Position of verse in chapter (1-176)',
+          'type' => 'varchar',
+          'length' => '8',
+          'not null' => true,
+        ),
+        'versetext' => array(
+          'description' => 'Content of the verse',
+          'type' => 'text',
+          // collation is utf8_general_ci by default
+        ),
+      ),
+      'primary key' => array('booknum','chapternum','versenum','translation'),
+      'unique keys' => array(
+        'vid_translation_unique' => array('vid','translation'),
+      ),
+      'foreign keys' => array(
+        'in_translation' => array(
+          'table' => 'lw_translations',
+          'columns' => array('translation'=>'abbr'),
+        ),
+        'in_book' => array(
+          'table' => 'lw_books',
+          'columns' => array('translation'=>'abbr',
+                             'booknum'=>'booknum'),
+        ),
+      ),
+    ),
+    'lw_books' => array(
+      'description' => 'Bible books and their names',
+      'fields' => array(
+        'booknum' => array(
+          'description' => 'Position of bible book in the translation (1-66)',
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => true,
+          'unsigned' => true,
+        ),
+        'translation' => array(
+          'description' => 'Bible translation this book is in',
+          'type' => 'varchar',
+          'length' => '8',
+          'not null' => true,
+        ),
+        'bookname' => array(
+          'description' => 'What this book is called in the specific translation',
+          'type' => 'varchar',
+          'not null' => true,
+          'length' => 200,
+          // collation is utf8_general_ci by default
+        ),
+      ),
+      'primary key' => array('booknum','translation'),
+      'foreign keys' => array(
+        'ref_translation' => array(
+          'table' => 'lw_translations',
+          'columns' => array('translation'=>'abbr'),
+        ),
+      ),
+    ),
+    'lw_subverses' => array(
+      'description' => 'Subdivision of Bible verses',
+      'fields' => array(
+        'vid' => array(
+          'description' => 'verse ID; unique within translation; all verses with this ID has the same textual content, but in different translations',
+          'type' => 'int',
+          'not null' => true,
+          'unsigned' => true,
+        ),
+        'translation' => array(
+          'description' => 'Bible translation the containing verse originates from',
+          'type' => 'varchar',
+          'length' => 8,
+          'not null' => true,
+        ),
+        'sid' => array(
+          'description' => 'Subverse id; unique within the verse; "a","b","c", etc.',
+          'type' => 'varchar',
+          'not null' => true,
+          'length' => 1,
+        ),
+        'text' => array(
+          'description' => 'The relevant part of the verse text',
+          'type' => 'text',
+          'not null' => true,
+          // collation is utf8_general_ci by default
+        ),
+      ),
+      'primary key' => array('vid','translation','sid'),
+      'foreign keys' => array(
+        'part_of_verse' => array(
+          'table' => 'lw_verses',
+          'columns' => array(
+            'vid'=>'vid',
+            'translation'=>'translation',
+          ),
+        ),
+        'in_translation' => array(
+          'table' => 'lw_translations',
+          'columns' => array('translation'=>'abbr'),
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_schema($field).
+ * https://api.drupal.org/api/drupal/modules!field!field.api.php/function/hook_field_schema/7
+ */
+function scripture_field_schema($field) {
+  return array(
+    'columns' => array(
+      'from_vid' => array(
+        'description' => 'Start of range of verses',
+        'type' => 'int',
+        'not-null' => true,
+        'unsigned' => true,
+      ),
+      'to_vid' => array(
+        'description' => 'End of range of verses',
+        'type' => 'int',
+        'not-null' => true,
+        'unsigned' => true,
+      ),
+      'sid' => array(
+        'description' => 'Optional subverse (only allowed when from_vid==to_vid)',
+        'type' => 'varchar',
+        'length' => 1,
+        'not-null' => false,
+        'default' => NULL,
+      ),
+    ),
+  );
+}

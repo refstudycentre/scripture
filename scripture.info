@@ -1,0 +1,4 @@
+name = Scripture
+description = Provides field types, formatters, widgets, and a DB-backend for referencing verses of the Bible in different translations. 
+core = 7.x
+package = "RSC"

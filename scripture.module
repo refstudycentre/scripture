@@ -34,6 +34,12 @@ function scripture_permission() {
   $permissions['scripture_admin'] = array(
     'title' => t('Scripture admin'),
     'description' => t('Administer translations and subverses of the Scripture module'),
+    'restrict access' => TRUE,
+  );
+
+  $permissions['scripture_node_listing'] = array(
+    'title' => t('View scripture node listings'),
+    'description' => t('Access pages like scripture/* which lists all nodes associated with the specified scripture ranges.'),
   );
    
   return $permissions;
@@ -89,6 +95,15 @@ function scripture_menu() {
     'access callback'  => 'user_access',
     'access arguments' => array('scripture_admin'),
     'file'             => 'scripture.admin.inc',
+  );
+
+  $items['scripture/%'] = array(
+    'title'            => 'Content by scripture',
+    'page callback'    => 'scripture_callback_node_listing',
+    'page arguments'   => array(1),
+    'access callback'  => 'user_access',
+    'access arguments' => array('scripture_node_listing'),
+    'file'             => 'scripture.pages.inc',
   );
   
   return $items;
@@ -283,3 +298,53 @@ function scripture_preview($values, $display = array()) {
   scripture_prepare($values,$display);
   return scripture_view($values,$display);
 }
+
+
+/**
+ * Decode a verse range represented as a string into a
+ * - starting vid
+ * - stopping vid
+ * - subverse id
+ */
+function scripture_decode_range($str) {
+
+  $from_vid = NULL;
+  $to_vid = NULL;
+  $sid = NULL;
+
+  $matches = array();
+  if (preg_match('/^(\d+)(-(\d+)|\.(\w))$/', $str, $matches)) {
+    // looks like the right shape, i.e. either 1234-5678 or 1234b
+
+    if (!empty($matches[1])) {
+
+      // starting verse is specified
+      $from_vid = $matches[1];
+
+      if (!empty($matches[3])) {
+        // ending verse is specified
+        $to_vid = $matches[3];
+      } else {
+
+        // use the starting verse for the ending verse
+        $to_vid = $from_vid;
+
+        // check for sid
+        if (!empty($matches[4])) {
+          $sid = $matches[4];
+        }
+
+      }
+
+    } // else invalid starting verse
+
+  }
+
+  return array(
+    'from_vid' => $from_vid,
+    'to_vid'   => $to_vid,
+    'sid'      => $sid,
+  );
+
+}
+

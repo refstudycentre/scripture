@@ -66,7 +66,7 @@ function scripture_callback_translations() {
   $form = array();
   
   $translations = scripture_get_translations();
-  foreach ($translations as $id => &$t) {
+  foreach ($translations as $abbr => &$t) {
     $t = "{$t->abbr} / {$t->lang} / {$t->name}";
   }
   

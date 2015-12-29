@@ -235,12 +235,12 @@ function scripture_str_verseref($from_verse, $to_verse, $sid = NULL, $bookname =
 
   if ($from_verse['vid'] == $to_verse['vid']) {
     if (empty($sid)) {
-      $str = "{$book['bookname']} {$from_verse['chapternum']}:{$from_verse['versenum']}";
+      $str = "{$bookname} {$from_verse['chapternum']}:{$from_verse['versenum']}";
     } else {
-      $str = "{$book['bookname']} {$from_verse['chapternum']}:{$from_verse['versenum']}.{$sid}";
+      $str = "{$bookname} {$from_verse['chapternum']}:{$from_verse['versenum']}.{$sid}";
     }
   } else {
-    $str = "{$book['bookname']} {$from_verse['chapternum']}:{$from_verse['versenum']} - {$to_verse['chapternum']}:{$to_verse['versenum']}";
+    $str = "{$bookname} {$from_verse['chapternum']}:{$from_verse['versenum']} - {$to_verse['chapternum']}:{$to_verse['versenum']}";
   }
   
   if (!empty($translation_id)) {

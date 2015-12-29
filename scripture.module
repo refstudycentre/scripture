@@ -4,6 +4,27 @@ module_load_include('inc','scripture','scripture.field');
 module_load_include('inc','scripture','scripture.db');
 module_load_include('inc','scripture','scripture.element');
 
+
+/**
+ * General function used during the installation of various translations
+ */
+
+function scripture_readandmysqlexecute($myfile) {
+	$sql = file($myfile, true);
+	$templine = '';
+	
+	foreach ($sql as $line) {
+		if (substr($line, 0, 2) == '--' || $line == '')
+			continue;
+		$templine .= $line;
+		if (substr(trim($line), -1, 1) == ';') {
+			db_query($templine);
+			$templine = '';
+		}
+	}	
+}
+
+
 /**
  * Implements hook_permission().
  */

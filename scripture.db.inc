@@ -214,3 +214,49 @@ function scripture_get_book($verse) {
   else
     return array();
 }
+
+
+/**
+ * Get nodes which reference the given verse range
+ */
+function scripture_get_nodes($from_vid, $to_vid = NULL, $sid = NULL) {
+
+  if (empty($sid)) {
+
+    // subverse has not been specified. use verse range or single verse
+
+    if (empty($to_vid)) {
+
+      // single verse
+      $to_vid = $from_vid;
+
+    } else {
+
+      // verse range
+      if ($to_vid < $from_vid) {
+
+        // error: negative verse range...
+        return FALSE;
+
+      }
+
+    }
+
+    // TODO: we need an index table which maps verse ids to node ids.
+
+//    $query = new EntityFieldQuery();
+//    $query
+//      ->entityCondition('entity_type', 'node')
+//      ->propertyConfition('status', NODE_PUBLISHED)
+//      ->fieldConfition('')
+
+  } else {
+
+    // subverse has been specified, so ignore $to_vid
+    // TODO: write query
+    return array();
+
+  }
+
+}
+

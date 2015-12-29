@@ -163,52 +163,60 @@ function scripture_prepare(&$values, $display) {
  */
 function scripture_view($values, $display) {
   $output = array();
-  
-  if ($display['show_ref']) {
-    $output['ref'] = array(
-      '#prefix' => '<cite>',
-      '#markup' => scripture_str_verseref($values['from_verse'], $values['to_verse'], $values['sid'], NULL, $values['translation']),
-      '#suffix' => '</cite>'
-    );
-  }
-  
-  switch ($display['show_text']) {
-    case SCRIPTURE_SHOW_TEXT_TRUNC:
-      // if there is a subverse, show only that
-      if (!empty($values['subverse'])) {
-        $markup = $values['subverse'];
-      } else {
-        $markup = scripture_shorten($values['from_verse']['versetext'], $values['to_verse']['versetext']);
-      }
-      $output['text'] = array(
-        '#prefix' => '<q>',
-        '#markup' => $markup,
-        '#suffix' => '</q>'
+
+  if (empty($values['from_verse']) || empty($values['to_verse']) || empty($values['sid'])) {
+
+    drupal_set_message("Cannot view verses, as they were not properly loaded.", "error", FALSE);
+
+  } else {
+
+    if ($display['show_ref']) {
+      $output['ref'] = array(
+        '#prefix' => '<cite>',
+        '#markup' => scripture_str_verseref($values['from_verse'], $values['to_verse'], $values['sid'], NULL, $values['translation']),
+        '#suffix' => '</cite>'
       );
-      break;
-    case SCRIPTURE_SHOW_TEXT_ALL:
-      
-      // pull all of the verses into one long string
-      $alltext = "";
-      foreach ($values['all_verses'] as $v) {
-        $alltext .= $v->versetext . " ";
-      }
-      
-      // if there is a subverse, emphasize it
-      if (!empty($values['subverse'])) {
-        // find the subverse and surround it with tags
-        $alltext = str_replace($values['subverse'], "<strong>{$values['subverse']}</strong>", $alltext);
-      }
-      
-      $output['text'] = array(
-        '#prefix' => '<blockquote>',
-        '#markup' => substr($alltext, 0, - 1),
-        '#suffix' => '</blockquote>'
-      );
-      
-      break;
+    }
+
+    switch ($display['show_text']) {
+      case SCRIPTURE_SHOW_TEXT_TRUNC:
+        // if there is a subverse, show only that
+        if (!empty($values['subverse'])) {
+          $markup = $values['subverse'];
+        } else {
+          $markup = scripture_shorten($values['from_verse']['versetext'], $values['to_verse']['versetext']);
+        }
+        $output['text'] = array(
+          '#prefix' => '<q>',
+          '#markup' => $markup,
+          '#suffix' => '</q>'
+        );
+        break;
+      case SCRIPTURE_SHOW_TEXT_ALL:
+
+        // pull all of the verses into one long string
+        $alltext = "";
+        foreach ($values['all_verses'] as $v) {
+          $alltext .= $v->versetext . " ";
+        }
+
+        // if there is a subverse, emphasize it
+        if (!empty($values['subverse'])) {
+          // find the subverse and surround it with tags
+          $alltext = str_replace($values['subverse'], "<strong>{$values['subverse']}</strong>", $alltext);
+        }
+
+        $output['text'] = array(
+          '#prefix' => '<blockquote>',
+          '#markup' => substr($alltext, 0, - 1),
+          '#suffix' => '</blockquote>'
+        );
+
+        break;
+    }
+
   }
-  
+
   return $output;
   
 }

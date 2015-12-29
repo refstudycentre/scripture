@@ -242,7 +242,7 @@ function scripture_get_nodes($from_vid, $to_vid = NULL, $sid = NULL) {
 
     }
 
-    // TODO: we need an index table which maps verse ids to node ids.
+    // TODO: we need some way to quickly inspect all fields of type "Scripture reference"
 
 //    $query = new EntityFieldQuery();
 //    $query

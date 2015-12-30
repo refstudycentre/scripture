@@ -264,6 +264,10 @@ function scripture_field_widget_form(&$form, &$form_state, $field, $instance, $l
  * Define what constitutes an empty item for a field type.
  */
 function scripture_field_is_empty($item, $field) {
-  return empty($item['verse']['book']) || empty($item['verse']['from_chapter']) || empty($item['verse']['from_verse']);
+  return
+    empty($item['verse']['from_chapter']) &&
+    empty($item['verse']['from_verse']) &&
+    empty($item['verse']['to_chapter']) &&
+    empty($item['verse']['to_verse']);
 }
 

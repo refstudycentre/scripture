@@ -247,9 +247,24 @@ function form_type_scripture_verse_picker_value($element, $input = FALSE, &$form
  * Loads vids from database
  */
 function scripture_verse_picker_validate($element, &$form_state) {
+
+  // if the element is empty and not required, then all is well
+  if (scripture_widget_is_empty($element) && $element['#required'] == FALSE) {
+    return $element;
+  } // else further inspection is required
   
   $v = &$element['#value'];
   $errors = FALSE;
+
+  // check that a starting verse and chapter is selected
+  if (empty($v['from_chapter'])) {
+    form_error($element, t('Specify a starting chapter.'));
+    $errors = TRUE;
+  }
+  if (empty($v['from_verse'])) {
+    form_error($element, t('Specify a starting verse.'));
+    $errors = TRUE;
+  }
   
   // check that verse accompanies chapter
   if (!empty($v['to_chapter']) && empty($v['to_verse'])) {
@@ -310,6 +325,19 @@ function scripture_verse_picker_validate($element, &$form_state) {
   
   return $element;
 }
+
+
+/**
+ * Check if element is empty
+ */
+function scripture_widget_is_empty($element) {
+  return
+    empty($element['#value']['from_chapter']) &&
+    empty($element['#value']['from_verse']) &&
+    empty($element['#value']['to_chapter']) &&
+    empty($element['#value']['to_verse']);
+}
+
 
 /**
  * React to user changing the translation

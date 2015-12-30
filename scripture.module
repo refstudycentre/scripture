@@ -78,6 +78,18 @@ function scripture_menu() {
     'access arguments' => array('scripture_admin'),
     'file'             => 'scripture.admin.inc',
   );
+
+  $items['admin/structure/scripture/queries'] = array(
+    'title'            => 'Queries',
+    'description'      => 'Configure query settings',
+    'type'             => MENU_LOCAL_TASK,
+    'weight'           => 20,
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('scripture_callback_queries'),
+    'access callback'  => 'user_access',
+    'access arguments' => array('scripture_admin'),
+    'file'             => 'scripture.admin.inc',
+  );
   
   $items['admin/structure/scripture/subverses'] = array(
     'title'            => 'Subverses',

@@ -85,6 +85,33 @@ function scripture_callback_translations() {
 }
 
 /**
+ * Page callback for admin/structure/scripture/translations
+ */
+function scripture_callback_queries() {
+  $form = array();
+
+  $form['scripture_match_quality_weight_query'] = array(
+    '#type' => 'textfield',
+    '#size' => 3,
+    '#title' => t('Query match quality weight'),
+    '#description' => t('The relative importance of search results covering the entire query.'),
+    '#required' => true,
+    '#default_value' => 1,
+  );
+
+  $form['scripture_match_quality_weight_entity'] = array(
+    '#type' => 'textfield',
+    '#size' => 3,
+    '#title' => t('Entity match quality weight'),
+    '#description' => t('The relative importance of the query covering the entire range of verses in the search results.'),
+    '#required' => true,
+    '#default_value' => 1,
+  );
+
+  return system_settings_form($form);
+}
+
+/**
  * Form for admin/structure/scripture/subverses
  * Build a form to manage (add, modify, delete) the subverses, making use of single verse picker
  *

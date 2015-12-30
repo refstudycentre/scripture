@@ -101,6 +101,7 @@ function scripture_field_formatter_prepare_view($entity_type, $entities, $field,
     $s = &$displays[$eid]['settings'];
     
     foreach ($i as $delta => &$val) {
+      $val['translation'] = NULL; // This will cause the default translation to be loaded later
       scripture_prepare($val,$s);
     }
   

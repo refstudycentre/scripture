@@ -101,6 +101,7 @@ function scripture_field_formatter_prepare_view($entity_type, $entities, $field,
     $s = &$displays[$eid]['settings'];
     
     foreach ($i as $delta => &$val) {
+      $val['translation'] = NULL; // This will cause the default translation to be loaded later
       scripture_prepare($val,$s);
     }
   
@@ -224,21 +225,33 @@ function scripture_field_widget_form(&$form, &$form_state, $field, $instance, $l
   $element['verse'] = array(
     '#type' => 'scripture_verse_picker',
   );
-  
-  if (!empty($items[0])) {
-    $translation = ($items[0]['translation'] > 0) ? $items[0]['translation'] : NULL;
-    $from_verse = scripture_get_verse($items[0]['from_vid'], $translation);
-    $to_verse = scripture_get_verse($items[0]['to_vid'], $translation);
-    
-    $element['verse']['#default_value'] = array(
-      'translation'  => $translation,
-      'book'         => $from_verse['booknum'],
-      'from_chapter' => $from_verse['chapternum'],
-      'from_verse'   => $from_verse['versenum'],
-      'to_chapter'   => $to_verse['chapternum'],
-      'to_verse'     => $to_verse['versenum'],
-      'sid'          => $items[0]['sid'],
-    );
+
+  $item = &$items[$delta];
+
+  if (!empty($item)) {
+    $translation = !empty($item['translation']) ? $item['translation'] : variable_get('scripture_default_translation', NULL);
+
+    // Check if a translation is specified
+    if (empty($translation)) {
+
+      drupal_set_message("The default translation is not specified. Don't know how to display verse range in the widget form.", 'error', FALSE);
+
+    } else {
+
+      $from_verse = scripture_get_verse($item['from_vid'], $translation);
+      $to_verse = scripture_get_verse($item['to_vid'], $translation);
+
+      $element['verse']['#default_value'] = array(
+        'translation' => $translation,
+        'book' => $from_verse['booknum'],
+        'from_chapter' => $from_verse['chapternum'],
+        'from_verse' => $from_verse['versenum'],
+        'to_chapter' => $to_verse['chapternum'],
+        'to_verse' => $to_verse['versenum'],
+        'sid' => $item['sid'],
+      );
+
+    }
   }
   
   return $element;
@@ -251,6 +264,10 @@ function scripture_field_widget_form(&$form, &$form_state, $field, $instance, $l
  * Define what constitutes an empty item for a field type.
  */
 function scripture_field_is_empty($item, $field) {
-  return empty($item['verse']['book']) || empty($item['verse']['from_chapter']) || empty($item['verse']['from_verse']);
+  return
+    empty($item['verse']['from_chapter']) &&
+    empty($item['verse']['from_verse']) &&
+    empty($item['verse']['to_chapter']) &&
+    empty($item['verse']['to_verse']);
 }
 

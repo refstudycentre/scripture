@@ -34,6 +34,12 @@ function scripture_permission() {
   $permissions['scripture_admin'] = array(
     'title' => t('Scripture admin'),
     'description' => t('Administer translations and subverses of the Scripture module'),
+    'restrict access' => TRUE,
+  );
+
+  $permissions['scripture_node_listing'] = array(
+    'title' => t('View scripture node listings'),
+    'description' => t('Access pages like scripture/* which lists all nodes associated with the specified scripture ranges.'),
   );
    
   return $permissions;
@@ -101,6 +107,15 @@ function scripture_menu() {
     'access callback'  => 'user_access',
     'access arguments' => array('scripture_admin'),
     'file'             => 'scripture.admin.inc',
+  );
+
+  $items['scripture/%'] = array(
+    'title'            => 'Content by scripture',
+    'page callback'    => 'scripture_callback_node_listing',
+    'page arguments'   => array(1),
+    'access callback'  => 'user_access',
+    'access arguments' => array('scripture_node_listing'),
+    'file'             => 'scripture.pages.inc',
   );
   
   return $items;
@@ -175,52 +190,60 @@ function scripture_prepare(&$values, $display) {
  */
 function scripture_view($values, $display) {
   $output = array();
-  
-  if ($display['show_ref']) {
-    $output['ref'] = array(
-      '#prefix' => '<cite>',
-      '#markup' => scripture_str_verseref($values['from_verse'], $values['to_verse'], $values['sid'], NULL, $values['translation']),
-      '#suffix' => '</cite>'
-    );
-  }
-  
-  switch ($display['show_text']) {
-    case SCRIPTURE_SHOW_TEXT_TRUNC:
-      // if there is a subverse, show only that
-      if (!empty($values['subverse'])) {
-        $markup = $values['subverse'];
-      } else {
-        $markup = scripture_shorten($values['from_verse']['versetext'], $values['to_verse']['versetext']);
-      }
-      $output['text'] = array(
-        '#prefix' => '<q>',
-        '#markup' => $markup,
-        '#suffix' => '</q>'
+
+  if (empty($values['from_verse'])) {
+
+    drupal_set_message("Cannot view verses, as they were not properly loaded.", "error", FALSE);
+
+  } else {
+
+    if ($display['show_ref']) {
+      $output['ref'] = array(
+        '#prefix' => '<cite>',
+        '#markup' => scripture_str_verseref($values['from_verse'], $values['to_verse'], $values['sid'], NULL, $values['translation']),
+        '#suffix' => '</cite>'
       );
-      break;
-    case SCRIPTURE_SHOW_TEXT_ALL:
-      
-      // pull all of the verses into one long string
-      $alltext = "";
-      foreach ($values['all_verses'] as $v) {
-        $alltext .= $v->versetext . " ";
-      }
-      
-      // if there is a subverse, emphasize it
-      if (!empty($values['subverse'])) {
-        // find the subverse and surround it with tags
-        $alltext = str_replace($values['subverse'], "<strong>{$values['subverse']}</strong>", $alltext);
-      }
-      
-      $output['text'] = array(
-        '#prefix' => '<blockquote>',
-        '#markup' => substr($alltext, 0, - 1),
-        '#suffix' => '</blockquote>'
-      );
-      
-      break;
+    }
+
+    switch ($display['show_text']) {
+      case SCRIPTURE_SHOW_TEXT_TRUNC:
+        // if there is a subverse, show only that
+        if (!empty($values['subverse'])) {
+          $markup = $values['subverse'];
+        } else {
+          $markup = scripture_shorten($values['from_verse']['versetext'], $values['to_verse']['versetext']);
+        }
+        $output['text'] = array(
+          '#prefix' => '<q>',
+          '#markup' => $markup,
+          '#suffix' => '</q>'
+        );
+        break;
+      case SCRIPTURE_SHOW_TEXT_ALL:
+
+        // pull all of the verses into one long string
+        $alltext = "";
+        foreach ($values['all_verses'] as $v) {
+          $alltext .= $v->versetext . " ";
+        }
+
+        // if there is a subverse, emphasize it
+        if (!empty($values['subverse'])) {
+          // find the subverse and surround it with tags
+          $alltext = str_replace($values['subverse'], "<strong>{$values['subverse']}</strong>", $alltext);
+        }
+
+        $output['text'] = array(
+          '#prefix' => '<blockquote>',
+          '#markup' => substr($alltext, 0, - 1),
+          '#suffix' => '</blockquote>'
+        );
+
+        break;
+    }
+
   }
-  
+
   return $output;
   
 }
@@ -228,7 +251,7 @@ function scripture_view($values, $display) {
 /**
  * Generate a human-readable verse range
  */
-function scripture_str_verseref($from_verse, $to_verse, $sid = NULL, $bookname = NULL, $translation_id = NULL) {
+function scripture_str_verseref($from_verse, $to_verse, $sid = NULL, $bookname = NULL, $translation_abbr = NULL) {
   
   $str = "";
   
@@ -239,16 +262,16 @@ function scripture_str_verseref($from_verse, $to_verse, $sid = NULL, $bookname =
 
   if ($from_verse['vid'] == $to_verse['vid']) {
     if (empty($sid)) {
-      $str = "{$book['bookname']} {$from_verse['chapternum']}:{$from_verse['versenum']}";
+      $str = "{$bookname} {$from_verse['chapternum']}:{$from_verse['versenum']}";
     } else {
-      $str = "{$book['bookname']} {$from_verse['chapternum']}:{$from_verse['versenum']}.{$sid}";
+      $str = "{$bookname} {$from_verse['chapternum']}:{$from_verse['versenum']}.{$sid}";
     }
   } else {
-    $str = "{$book['bookname']} {$from_verse['chapternum']}:{$from_verse['versenum']} - {$to_verse['chapternum']}:{$to_verse['versenum']}";
+    $str = "{$bookname} {$from_verse['chapternum']}:{$from_verse['versenum']} - {$to_verse['chapternum']}:{$to_verse['versenum']}";
   }
   
-  if (!empty($translation_id)) {
-    $translation = scripture_get_translation($translation_id);
+  if (!empty($translation_abbr)) {
+    $translation = scripture_get_translation($translation_abbr);
     $str .= " (<abbr title='{$translation['name']}'>".strtoupper($translation['abbr'])."</abbr>)";
   }
   
@@ -311,6 +334,57 @@ function scripture_match_quality($field_start_vid, $field_end_vid, $node_sid = N
   $entity_match_quality = $overlap_size / ($field_end_vid - $field_start_vid);
 
   return $weight_q * $query_match_quality + $weight_e * $entity_match_quality;
+
+}
+
+}
+
+
+/**
+ * Decode a verse range represented as a string into a
+ * - starting vid
+ * - stopping vid
+ * - subverse id
+ */
+function scripture_decode_range($str) {
+
+  $from_vid = NULL;
+  $to_vid = NULL;
+  $sid = NULL;
+
+  $matches = array();
+  if (preg_match('/^(\d+)(-(\d+)|\.(\w))?$/', $str, $matches)) {
+    // looks like the right shape, i.e. either 1234 or 1234-5678 or 1234b
+
+    if (!empty($matches[1])) {
+
+      // starting verse is specified
+      $from_vid = $matches[1];
+
+      if (!empty($matches[3])) {
+        // ending verse is specified
+        $to_vid = $matches[3];
+      } else {
+
+        // use the starting verse for the ending verse
+        $to_vid = $from_vid;
+
+        // check for sid
+        if (!empty($matches[4])) {
+          $sid = $matches[4];
+        }
+
+      }
+
+    } // else invalid starting verse
+
+  } // else it didn't match the regular expression
+
+  return array(
+    'from_vid' => $from_vid,
+    'to_vid'   => $to_vid,
+    'sid'      => $sid,
+  );
 
 }
 

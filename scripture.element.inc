@@ -55,7 +55,6 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
   // Element settings
   $settings = empty($element['#scripture_settings']) ? array() : $element['#scripture_settings'];
   $settings += array(
-    'require_translation' => FALSE, // translation is optional if FALSE
     'allow_translation'   => TRUE,  // translation cannot be edited if FALSE
     'allow_book'          => TRUE,  // book cannot be edited if FALSE
     'allow_range'         => TRUE,  // only a single verse may be selected if FALSE
@@ -111,22 +110,18 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
     '#disabled' => !$settings['allow_translation'],
   );
   
-  if ($settings['require_translation']) {
-    $element['translation']['#required'] = TRUE;
-    $element['translation']['#options'] = $translations;
-    $element['translation']['#default_value'] = empty($init['translation']) ? variable_get('scripture_default_translation', NULL) : $init['translation'];
-  } else {
-    $element['translation']['#options'] = array(0 => 'N/A') + $translations;
-    $element['translation']['#default_value'] = empty($init['translation']) ? 'N/A' : $init['translation'];
-  }
-  
+  // Translation is always required for the verse range to even make sense
+  $element['translation']['#required'] = TRUE;
+  $element['translation']['#options'] = $translations;
+  $element['translation']['#default_value'] = empty($init['translation']) ? variable_get('scripture_default_translation', NULL) : $init['translation'];
+
   $element['book'] = array(
     '#prefix'        => "<div id='{$book_wrapper}'>",
     '#suffix'        => "</div>",
     '#type'          => 'select',
     '#title'         => t('Book:'),
     '#options'       => $books,
-    '#required'      => true,
+    '#required'      => false,
     '#default_value' => $init['book'],
     '#disabled'      => !$settings['allow_book'],
   );
@@ -135,7 +130,7 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
     '#type'           => 'textfield',
     '#size'           => 3,
     '#maxlength'      => 3,
-    '#required'       => true,
+    '#required'       => false,
     '#default_value'  => $init['from_chapter'],
     '#title_display'  => 'invisible',
     '#theme_wrappers' => array('scripture_inline_wrapper'),
@@ -145,7 +140,7 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
     '#type'           => 'textfield',
     '#size'           => 3,
     '#maxlength'      => 3,
-    '#required'       => true,
+    '#required'       => false,
     '#default_value'  => $init['from_verse'],
     '#title_display'  => 'invisible',
     '#theme_wrappers' => array('scripture_inline_wrapper'),
@@ -227,11 +222,6 @@ function form_type_scripture_verse_picker_value($element, $input = FALSE, &$form
     
   } else {
     
-    // check whether a specific translation was selected
-    if (empty($input['translation']) || $input['translation'] == 'N/A') {
-      $input['translation'] = NULL;
-    }
-    
     if (empty($input['to_chapter'])) {
   
       // use the from_chapter value if to_chapter was empty
@@ -257,9 +247,24 @@ function form_type_scripture_verse_picker_value($element, $input = FALSE, &$form
  * Loads vids from database
  */
 function scripture_verse_picker_validate($element, &$form_state) {
+
+  // if the element is empty and not required, then all is well
+  if (scripture_widget_is_empty($element) && $element['#required'] == FALSE) {
+    return $element;
+  } // else further inspection is required
   
   $v = &$element['#value'];
   $errors = FALSE;
+
+  // check that a starting verse and chapter is selected
+  if (empty($v['from_chapter'])) {
+    form_error($element, t('Specify a starting chapter.'));
+    $errors = TRUE;
+  }
+  if (empty($v['from_verse'])) {
+    form_error($element, t('Specify a starting verse.'));
+    $errors = TRUE;
+  }
   
   // check that verse accompanies chapter
   if (!empty($v['to_chapter']) && empty($v['to_verse'])) {
@@ -320,6 +325,19 @@ function scripture_verse_picker_validate($element, &$form_state) {
   
   return $element;
 }
+
+
+/**
+ * Check if element is empty
+ */
+function scripture_widget_is_empty($element) {
+  return
+    empty($element['#value']['from_chapter']) &&
+    empty($element['#value']['from_verse']) &&
+    empty($element['#value']['to_chapter']) &&
+    empty($element['#value']['to_verse']);
+}
+
 
 /**
  * React to user changing the translation

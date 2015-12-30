@@ -20,21 +20,36 @@ function scripture_get_translations() {
 /**
  * Get the info for a translation based on translation id
  */
-function scripture_get_translation($tid) {
-  return db_select('lw_translations', 't')->fields('t')->condition('abbr',$tid)->execute()->fetchAssoc();
+function scripture_get_translation($abbr) {
+  return db_select('lw_translations', 't')->fields('t')->condition('abbr',$abbr)->execute()->fetchAssoc();
 }
 
 /**
  * Retrieve verse from the db based on vid
  */
 function scripture_get_verse($vid, $translation = NULL) {
-  if (empty($translation))
+
+  // Try to load the default translation if it is not specified
+  if (empty($translation)) {
     $translation = variable_get('scripture_default_translation', NULL);
-  
-  if (!empty($translation))
-    return db_select('lw_verses', 'v')->fields('v')->condition('vid', $vid)->condition('translation', $translation)->range(0, 1)->execute()->fetchAssoc();
-  else
-    return array();
+  }
+
+  // Check if a translation is specified
+  if (empty($translation)) {
+
+    drupal_set_message("The default translation is not specified. Don't know which text to load from database.", 'error', FALSE);
+    return FALSE;
+
+  } else {
+    return db_select('lw_verses', 'v')
+      ->fields('v')
+      ->condition('vid', $vid)
+      ->condition('translation', $translation)
+      ->range(0, 1)
+      ->execute()
+      ->fetchAssoc();
+  }
+
 }
 
 /**
@@ -127,78 +142,30 @@ function scripture_save_subverses($vid, $translation, $new) {
  * Retrieve all verses in a range from the db based on vid
  */
 function scripture_get_verses_between($from_vid, $to_vid, $translation = NULL) {
-  
-  if (empty($translation))
+
+  // Try to load the default translation if it is not specified
+  if (empty($translation)) {
     $translation = variable_get('scripture_default_translation', NULL);
-  
-  $from_verse = scripture_get_verse($from_vid, $translation);
-  $to_verse = scripture_get_verse($to_vid, $translation);
-  $book = scripture_get_book($from_verse);
-  
-  if (!empty($translation) && !empty($book)) {
-    
-    if ($from_verse['chapternum'] == $to_verse['chapternum']) {
-      
-      // The query is much simpler if the range is within one chapter:
-      $range_condition = db_and()
-        ->condition('chapternum', $from_verse['chapternum'])
-        ->condition('versenum', $from_verse['versenum'], '>=')
-        ->condition('versenum', $to_verse['versenum'], '<=');
-      
-    } else {
-      
-      /*
-       * The range spans multiple chapters
-       * building this condition:
-       * (
-       *   (
-       *     chapternum > from_chapternum &&
-       *     chapternum < to_chapternum
-       *   ) ||
-       *   (
-       *     chapternum = from_chapternum &&
-       *     versenum >= from_versenum
-       *   ) ||
-       *   (
-       *     chapternum = to_chapternum &&
-       *     versenum <= to_versenum
-       *   )
-       * )
-       */
-      
-      $middle_chapters = db_and()
-        ->condition('chapternum', $from_verse['chapternum'], '>')
-        ->condition('chapternum', $to_verse['chapternum'], '<');
-      
-      $first_chapter = db_and()
-        ->condition('chapternum', $from_verse['chapternum'])
-        ->condition('versenum', $from_verse['versenum'], '>=');
-      
-      $last_chapter = db_and()
-        ->condition('chapternum', $to_verse['chapternum'])
-        ->condition('versenum', $to_verse['versenum'], '<=');
-      
-      $range_condition = db_or()
-        ->condition($middle_chapters)
-        ->condition($first_chapter)
-        ->condition($last_chapter);
-      
-    }
-    
-    return db_select('lw_verses', 'v')
-    ->fields('v')
-    ->condition('translation', $translation)
-    ->condition('booknum', $book['booknum'])
-    ->condition($range_condition)
-    ->orderBy('chapternum', 'ASC')
-    ->orderBy('versenum', 'ASC')
-    ->execute()
-    ->fetchAllAssoc('vid');
-    
-  
-  } else {
-    return array();
   }
+
+  // Check if a translation is specified
+  if (empty($translation)) {
+
+    drupal_set_message("The default translation is not specified. Don't know which text to load from database.", 'error', FALSE);
+    return FALSE;
+
+  } else {
+
+    return db_select('lw_verses', 'v')
+      ->fields('v')
+      ->condition('translation', $translation)
+      ->condition('vid', array($from_vid, $to_vid), 'BETWEEN')
+      ->orderBy('vid', 'ASC')// ordering by versenum does not work, because there are alphanumeric verses in some translations
+      ->execute()
+      ->fetchAllAssoc('vid');
+
+  }
+
 }
 
 /**
@@ -247,3 +214,49 @@ function scripture_get_book($verse) {
   else
     return array();
 }
+
+
+/**
+ * Get nodes which reference the given verse range
+ */
+function scripture_get_nodes($from_vid, $to_vid = NULL, $sid = NULL) {
+
+  if (empty($sid)) {
+
+    // subverse has not been specified. use verse range or single verse
+
+    if (empty($to_vid)) {
+
+      // single verse
+      $to_vid = $from_vid;
+
+    } else {
+
+      // verse range
+      if ($to_vid < $from_vid) {
+
+        // error: negative verse range...
+        return FALSE;
+
+      }
+
+    }
+
+    // TODO: we need some way to quickly inspect all fields of type "Scripture reference"
+
+//    $query = new EntityFieldQuery();
+//    $query
+//      ->entityCondition('entity_type', 'node')
+//      ->propertyConfition('status', NODE_PUBLISHED)
+//      ->fieldConfition('')
+
+  } else {
+
+    // subverse has been specified, so ignore $to_vid
+    // TODO: write query
+    return array();
+
+  }
+
+}
+

@@ -55,7 +55,6 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
   // Element settings
   $settings = empty($element['#scripture_settings']) ? array() : $element['#scripture_settings'];
   $settings += array(
-    'require_translation' => FALSE, // translation is optional if FALSE
     'allow_translation'   => TRUE,  // translation cannot be edited if FALSE
     'allow_book'          => TRUE,  // book cannot be edited if FALSE
     'allow_range'         => TRUE,  // only a single verse may be selected if FALSE
@@ -111,15 +110,11 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
     '#disabled' => !$settings['allow_translation'],
   );
   
-  if ($settings['require_translation']) {
-    $element['translation']['#required'] = TRUE;
-    $element['translation']['#options'] = $translations;
-    $element['translation']['#default_value'] = empty($init['translation']) ? variable_get('scripture_default_translation', NULL) : $init['translation'];
-  } else {
-    $element['translation']['#options'] = array(0 => 'N/A') + $translations;
-    $element['translation']['#default_value'] = empty($init['translation']) ? 'N/A' : $init['translation'];
-  }
-  
+  // Translation is always required for the verse range to even make sense
+  $element['translation']['#required'] = TRUE;
+  $element['translation']['#options'] = $translations;
+  $element['translation']['#default_value'] = empty($init['translation']) ? variable_get('scripture_default_translation', NULL) : $init['translation'];
+
   $element['book'] = array(
     '#prefix'        => "<div id='{$book_wrapper}'>",
     '#suffix'        => "</div>",

@@ -337,8 +337,6 @@ function scripture_match_quality($field_start_vid, $field_end_vid, $node_sid = N
 
 }
 
-}
-
 
 /**
  * Decode a verse range represented as a string into a

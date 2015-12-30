@@ -282,8 +282,13 @@ function scripture_preview($values, $display = array()) {
  */
 function scripture_match_quality($field_start_vid, $field_end_vid, $node_sid = NULL, $query_start_vid, $query_end_vid, $query_sid = NULL) {
 
-  static $weight_q = variable_get("scripture_match_quality_weight_query", 1);
-  static $weight_e = variable_get("scripture_match_quality_weight_entity", 1);
+  static $weight_q;
+  static $weight_e;
+
+  if (!isset($weight_q)) {
+    $weight_q = variable_get("scripture_match_quality_weight_query", 1);
+    $weight_e = variable_get("scripture_match_quality_weight_entity", 1);
+  }
 
   // TODO: support subverses?
 

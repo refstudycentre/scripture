@@ -222,11 +222,6 @@ function form_type_scripture_verse_picker_value($element, $input = FALSE, &$form
     
   } else {
     
-    // check whether a specific translation was selected
-    if (empty($input['translation']) || $input['translation'] == 'N/A') {
-      $input['translation'] = NULL;
-    }
-    
     if (empty($input['to_chapter'])) {
   
       // use the from_chapter value if to_chapter was empty

@@ -386,3 +386,30 @@ function scripture_decode_range($str) {
 
 }
 
+
+function scripture_vidrange2text($startvid, $endvid, $translation = NULL) {
+
+	# use the default translation if not explicitly defined
+	if (empty($translation)) $translation = variable_get('scripture_default_translation', NULL);
+	
+	$sql = "SELECT chapternum, versenum, bookname
+			FROM lw_verses
+			INNER JOIN lw_books using (booknum, translation)
+			WHERE translation=:trans AND vid in (:vid1, :vid2)
+			ORDER BY vid";
+	$rst = db_query($sql, array(':trans' => $translation, ':vid1' => $startvid, ':vid2' => $endvid));
+
+	$een = $rst->fetchObject();
+	$twee = $rst->fetchObject();
+	
+	$out = "{$een->bookname} {$een->chapternum}:{$een->versenum}";
+	if ($startvid != $endvid) {
+		if ($een->chapternum==$twee->chapternum){
+			$out .= "-{$twee->versenum}";
+		} else {
+			$out .= "-{$twee->chapternum}:{$twee->versenum}";
+		} 			
+	}
+
+	return $out;
+}

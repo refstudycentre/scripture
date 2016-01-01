@@ -19,7 +19,8 @@ function scripture_field_info() {
     'label' => t('Scripture reference'),
     'description' => t('A field that references a range of bible verses from a specific translation'),
     'default_widget' => 'scripture_picker',
-    'default_formatter' => 'scripture_formatter_plain'
+    'default_formatter' => 'scripture_formatter_plain',
+	'settings' => array('style' => 1),  # default style=1;  1==regular form elements;   2==tabular jQuery based widget; 
   );
   
   return $fields;
@@ -270,4 +271,29 @@ function scripture_field_is_empty($item, $field) {
     empty($item['verse']['to_chapter']) &&
     empty($item['verse']['to_verse']);
 }
+
+
+/*
+
+// Longer term we can expose the "settings" to the users in the GUI way, but for now we don't need this.... 
+// Code not tested - simply copied from the drupal API  hook_field_widget_settings_form
+
+function scripture_field_widget_settings_form($field, $instance) {
+  $widget = $instance['widget'];
+  $settings = $widget['settings'];
+
+  $form['style'] = array(
+      '#type' => 'select',
+      '#title' => t('Style of the widget'),
+	  '#options' => array(1 => 'Regular form elements (select, text box inputs)',
+	                      2 => 'jQuery-style point and click', ),
+      '#default_value' => $settings['style'],
+      '#element_validate' => array('element_validate_integer_positive'),
+      '#required' => TRUE,
+    );
+  }
+
+  return $form;
+}
+*/
 

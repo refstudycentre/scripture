@@ -7,7 +7,13 @@
 function theme_scripture_verse_picker($variables) {
   $output = "";
   $e = &$variables['element'];
-
+  
+  $style = 1;  //default
+  $settings = $e['#settings'];
+  if (!empty($settings)) {
+	  $style = $settings['style'];
+  }
+  
 //   $output .= drupal_render($e['preview']);
   $t = drupal_render($e['translation']);
   $b = drupal_render($e['book']);

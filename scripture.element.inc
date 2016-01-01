@@ -9,10 +9,16 @@ function theme_scripture_verse_picker($variables) {
   $e = &$variables['element'];
   
   $style = 1;  //default
-  $settings = $e['#settings'];
-  if (!empty($settings)) {
-	  $style = $settings['style'];
+  if (array_key_exists('#settings', $e)) {
+	$settings = $e['#settings'];
+	$style = $settings['style'];
   }
+  
+  if (!$style) $style=1;
+  if ($style==2) drupal_add_js(drupal_get_path('module', 'scripture').'/scripture.pickerstyle2.js');
+  
+  # generic outer wrapper to distinguish the different styles
+  $output .= "<div class='verse-picker-style-{$style}'>";
   
 //   $output .= drupal_render($e['preview']);
   $t = drupal_render($e['translation']);
@@ -23,7 +29,27 @@ function theme_scripture_verse_picker($variables) {
   $tv = drupal_render($e['to_verse']);
   $s = drupal_render($e['sid']);
   
-  $output .= "<div class='scripture-translation'>{$t}</div><div class='scripture-book-verse'>{$b} {$fc} : ${fv}";
+  # Translation 
+  switch ($style) {
+    case 1 :  
+	  $output .= "<div class='scripture-translation'>{$t}</div>";
+	  break;
+    case 2 : 
+	  $output .= "<div class='scripture-translation element-hidden'>{$t}</div>
+	              <div class='scripture-translation-alt'>{$e['translation']['#default_value']}</div>
+				  <div class='scripture-translation-selector element-hidden'><ul>";
+	  foreach ($e['translation']['#options'] as $key => $value) {
+		$output .= "<li><div class='transabbr'>$key</div><div class='transdesc'>$value</div></li>";
+	  }
+	  $output .= "</ul></div>";
+	  break;
+	default :
+	  # drupal error - should not happen!
+	  
+  }
+
+  # Book-name  
+  $output .= "<div class='scripture-book-verse'>{$b} {$fc} : ${fv}";
   
   if (strlen($tv)) {
     if (strlen($tc)) {
@@ -37,7 +63,7 @@ function theme_scripture_verse_picker($variables) {
     $output .= " ({$s})";
   }
   
-  $output .= "</div>";
+  $output .= "</div></div>";
   
   return $output;
 }

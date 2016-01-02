@@ -8,8 +8,10 @@ function ScriptureShowPopup(tag) {
 	if (!(typeof expandedWindow === 'undefined' || expandedWindow === null)) {
 		expandedWindow.hide();
 	}
+	var selector = tag.className.replace("-alt", "-selector").replace("scripture",".scripture");
+	// console.log(selector);
 	//find the new window, and display this....
-	expandedWindow = jQuery(tag).parent().find(".scripture-translation-selector");
+	expandedWindow = jQuery(tag).parent().find(selector);
 	expandedWindow.show();  
 }
 

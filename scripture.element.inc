@@ -1,5 +1,16 @@
 <?php
 
+function scripture_verse_picker_getstyle($input){
+  $style = 1;  //default
+  if (array_key_exists('#settings', $input)) {
+	$settings = $input['#settings'];
+	$style = $settings['style'];
+    if (!$style) $style=1;
+  }
+  return $style;
+}
+
+
 /**
  * Renders the inside of the element
  * DO NOT call drupal_render($variables['element']) (i.e. on the entire element), as this will cause recursion.
@@ -8,13 +19,8 @@ function theme_scripture_verse_picker($variables) {
   $output = "";
   $e = &$variables['element'];
   
-  $style = 1;  //default
-  if (array_key_exists('#settings', $e)) {
-	$settings = $e['#settings'];
-	$style = $settings['style'];
-  }
+  $style = scripture_verse_picker_getstyle($e);  //default
   
-  if (!$style) $style=1;
   if ($style==2) drupal_add_js(drupal_get_path('module', 'scripture').'/scripture.pickerstyle2.js');
   
   # generic outer wrapper to distinguish the different styles
@@ -44,8 +50,7 @@ function theme_scripture_verse_picker($variables) {
 	  $output .= "</ul></div>";
 	  break;
 	default :
-	  # drupal error - should not happen!
-	  
+	  drupal_set_message('Unknown style {$style} selected, not implemented in Translation part', 'error');
   }
 
   # Book-name  
@@ -84,6 +89,8 @@ function theme_scripture_inline_wrapper($var) {
  */
 function scripture_verse_picker_process($element, &$form_state, $complete_form) {
   
+  $style = scripture_verse_picker_getstyle($element);  //default
+  
   // Element settings
   $settings = empty($element['#scripture_settings']) ? array() : $element['#scripture_settings'];
   $settings += array(
@@ -109,7 +116,8 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
   // Options for select lists
   $translations = scripture_get_translations();
   foreach ($translations as $id => &$t) {
-    $t = "{$t->abbr} / {$t->lang} / {$t->name}";
+	if ($style=2) $t = "{$t->lang} / {$t->name}";
+	else          $t = "{$t->abbr} / {$t->lang} / {$t->name}";
   }
   if (!isset($translations[$init['translation']])) {
     $init['translation'] = NULL;

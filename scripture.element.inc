@@ -98,6 +98,18 @@ function theme_scripture_inline_wrapper($var) {
   return "<span title='{$tooltip}'>{$var['element']['#children']}</span>";
 }
 
+
+function scripture_ajax_translation_changed_multiple($form, &$form_state) {
+  $commands = array();
+  // Replace the form element.
+  $commands[] = ajax_command_replace("#".$form_state['#book-wrapper'], render(scripture_ajax_translation_changed($form, $form_state)), array());
+  // Invoke any JavaScript func
+//  $commands[] = ajax_command_invoke(NULL, 'ScriptureBookSelector_AfterRefresh()', array());
+
+  return array('#type' => 'ajax', '#commands' => $commands);
+  //ajax_deliver(array('#type' => 'ajax', '#commands' => $commands,));
+}
+
 /**
  * gets called when verse picker element is used in a form
  */
@@ -158,9 +170,12 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
     '#title' => t('Translation:'),
     '#title_display' => 'before',
     '#ajax' => array(
-      'wrapper'  => $form_state['#book-wrapper'],
-      'callback' => 'scripture_ajax_translation_changed',
-      'method'   => 'replace',
+	 /* old method, but single statement possible only */
+ 	 // 'wrapper'  => $form_state['#book-wrapper'],
+     // 'callback' => 'scripture_ajax_translation_changed',
+     // 'method'   => 'replace',
+	  'callback' => 'scripture_ajax_translation_changed_multiple',
+	  'wrapper' => 'wrapper',
     ),
     '#disabled' => !$settings['allow_translation'],
   );

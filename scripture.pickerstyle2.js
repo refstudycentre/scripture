@@ -31,6 +31,15 @@ function ScriptureSelectTranslation(tag) {
 	sel.trigger("change");  //init the ajax ?
 }
 
+
+function ScriptureSelectBook(tag) {
+	var vp = expandedWindow.parent();
+	var trans = tag.children[0].innerText;
+	ScriptureCloseAndDestroy();
+	
+	alert(trans);
+}
+
 /* This function is called after an AJAX update of the book list, which is triggered by selecting a different translation. */
 
 function ScriptureBookSelector_AfterRefresh()
@@ -56,16 +65,22 @@ function ScriptureBookSelector_AfterRefresh()
 
 
 
+
 /* The init for the first page load */
 
 jQuery(document).ready(function(){
-	jQuery(".scripture-translation-alt").click(function (e) {
+	jQuery(".scripture-translation-alt, .scripture-book-alt").click(function (e) {
 		ScriptureShowPopup(this);
 		e.stopPropagation();
 	});
 	
 	jQuery(".scripture-translation-selector li").click(function(e) {
 		ScriptureSelectTranslation(this);
+		e.stopPropagation();
+	});
+
+	jQuery(".scripture-book-selector li").click(function(e) {
+		ScriptureSelectBook(this);
 		e.stopPropagation();
 	});
 	

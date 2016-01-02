@@ -54,7 +54,21 @@ function theme_scripture_verse_picker($variables) {
   }
 
   # Book-name  
-  $output .= "<div class='scripture-book-verse'>{$b} {$fc} : ${fv}";
+  switch ($style) {
+    case 1 :  
+	  $output .= "<div class='scripture-book'>{$b}</div>";
+	  break;
+    case 2 : 
+	  $output .= "<div class='scripture-book xelement-hidden'>{$b}</div>
+	              <div class='scripture-book-alt'>{$e['book']['#default_value']}</div>
+				  <div class='scripture-book-selector xelement-hidden'></div>";
+	  break;
+	default :
+	  drupal_set_message('Unknown style {$style} selected, not implemented in Book part', 'error');
+  }
+
+  # Chapter and Verse
+  $output .= "<div class='scripture-verse'>{$fc} : ${fv}";
   
   if (strlen($tv)) {
     if (strlen($tc)) {

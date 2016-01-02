@@ -128,14 +128,15 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
   
   $element['#tree'] = TRUE;
   
-  $book_wrapper = drupal_html_id('scripture_verse_picker_book');
+  //only call this the first time...  the "process" hook is called for each ajax call, and the ajax id should be constant over the ajax calls
+  if (empty($form_state['#book-wrapper'])) $form_state['#book-wrapper'] = drupal_html_id('scripture_verse_picker_book');
 
   $element['translation'] = array(
     '#type' => 'select',
     '#title' => t('Translation:'),
     '#title_display' => 'before',
     '#ajax' => array(
-      'wrapper'  => $book_wrapper,
+      'wrapper'  => $form_state['#book-wrapper'],
       'callback' => 'scripture_ajax_translation_changed',
       'method'   => 'replace',
     ),
@@ -148,7 +149,7 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
   $element['translation']['#default_value'] = empty($init['translation']) ? variable_get('scripture_default_translation', NULL) : $init['translation'];
 
   $element['book'] = array(
-    '#prefix'        => "<div id='{$book_wrapper}'>",
+    '#prefix'        => "<div id='{$form_state['#book-wrapper']}'>",
     '#suffix'        => "</div>",
     '#type'          => 'select',
     '#title'         => t('Book:'),

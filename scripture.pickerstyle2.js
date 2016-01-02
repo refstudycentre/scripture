@@ -13,12 +13,18 @@ function ScriptureShowPopup(tag) {
 	expandedWindow.show();  
 }
 
-function ScriptureSelectTranslation(tag) {
+function ScriptureCloseAndDestroy(){
 	expandedWindow.hide();
-	var trans = tag.children[0].innerText;
-	console.debug(trans);
-	/* get the right verse-picker */
+	delete window.expandedWindow;
+}
+
+function ScriptureSelectTranslation(tag) {
 	var vp = expandedWindow.parent();
+	var trans = tag.children[0].innerText;
+	ScriptureCloseAndDestroy();
+	
+	//console.debug(trans);
+	/* get the right verse-picker */
 	vp.find(".scripture-translation-alt").text(trans);
 	var sel = vp.find(".scripture-translation select");
 	sel.val(trans)

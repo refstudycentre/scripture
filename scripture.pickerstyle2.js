@@ -66,4 +66,9 @@ jQuery(document).ready(function(){
 	jQuery(".scripture-translation-selector li").click(function() {
 		ScriptureSelectTranslation(this);
 	});
+	
+	jQuery(document).keyup(function(e) {
+		if ((expandedWindow) && (e.keyCode == 27)) ScriptureCloseAndDestroy(); // esc pressed - cancel the window
+	});	
+	
 });

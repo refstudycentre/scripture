@@ -59,16 +59,24 @@ function ScriptureBookSelector_AfterRefresh()
 /* The init for the first page load */
 
 jQuery(document).ready(function(){
-	jQuery(".scripture-translation-alt").click(function () {
+	jQuery(".scripture-translation-alt").click(function (e) {
 		ScriptureShowPopup(this);
+		e.stopPropagation();
 	});
 	
-	jQuery(".scripture-translation-selector li").click(function() {
+	jQuery(".scripture-translation-selector li").click(function(e) {
 		ScriptureSelectTranslation(this);
+		e.stopPropagation();
 	});
 	
 	jQuery(document).keyup(function(e) {
 		if ((expandedWindow) && (e.keyCode == 27)) ScriptureCloseAndDestroy(); // esc pressed - cancel the window
 	});	
 	
+	jQuery(document).click(function(e) {
+	  if (expandedWindow) {
+		ScriptureCloseAndDestroy();
+	  	e.stopPropagation();
+	  }
+    })	
 });

@@ -100,14 +100,15 @@ function theme_scripture_inline_wrapper($var) {
 
 
 function scripture_ajax_translation_changed_multiple($form, &$form_state) {
+  $style = scripture_verse_picker_getstyle($form);
+  
   $commands = array();
   // Replace the form element.
   $commands[] = ajax_command_replace("#".$form_state['#book-wrapper'], render(scripture_ajax_translation_changed($form, $form_state)), array());
   // Invoke any JavaScript func
-//  $commands[] = ajax_command_invoke(NULL, 'ScriptureBookSelector_AfterRefresh()', array());
+  if ($style==2) $commands[] = ajax_command_invoke(NULL, 'afterajaxbookrefresh', array());
 
   return array('#type' => 'ajax', '#commands' => $commands);
-  //ajax_deliver(array('#type' => 'ajax', '#commands' => $commands,));
 }
 
 /**

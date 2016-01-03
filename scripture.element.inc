@@ -149,15 +149,16 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
   // Options for select lists
   $translations = scripture_get_translations();
   foreach ($translations as $id => &$t) {
-	if ($style=2) $t = "{$t->lang} / {$t->name}";
-	else          $t = "{$t->abbr} / {$t->lang} / {$t->name}";
+	if ($style==2) $t = "{$t->lang} / {$t->name}";
+	else           $t = "{$t->abbr} / {$t->lang} / {$t->name}";
   }
   if (!isset($translations[$init['translation']])) {
     $init['translation'] = NULL;
   }
   $books = scripture_get_books($init['translation']);
   foreach ($books as $booknum => &$b) {
-    $b = "{$booknum}. {$b->bookname}";
+    if ($style==2) $b = "{$b->bookname}";
+	else           $b = "{$booknum}. {$b->bookname}";
   }
   if (!isset($books[$init['book']])) {
     $init['book'] = NULL;

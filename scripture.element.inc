@@ -4,8 +4,11 @@ function scripture_verse_picker_getstyle($input){
   $style = 1;  //default
   if (array_key_exists('#settings', $input)) {
 	$settings = $input['#settings'];
-	$style = $settings['style'];
-    if (!$style) $style=1;
+	if (array_key_exists('style', $settings)) {
+		$style = $settings['style'];
+	} else {
+		$style=1;
+	}
   }
   return $style;
 }
@@ -100,7 +103,8 @@ function theme_scripture_inline_wrapper($var) {
 
 
 function scripture_ajax_translation_changed_multiple($form, &$form_state) {
-  $style = scripture_verse_picker_getstyle($form);
+  $style = $form_state['#style'];
+  if (empty($style)) $style = 1;
   
   $commands = array();
   // Replace the form element.
@@ -117,6 +121,8 @@ function scripture_ajax_translation_changed_multiple($form, &$form_state) {
 function scripture_verse_picker_process($element, &$form_state, $complete_form) {
   
   $style = scripture_verse_picker_getstyle($element);  //default
+  
+  $form_state['#style'] = $style;   //copy style into form_state, for ajax processing
   
   // Element settings
   $settings = empty($element['#scripture_settings']) ? array() : $element['#scripture_settings'];

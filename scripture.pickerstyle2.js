@@ -16,8 +16,10 @@ function ScriptureShowPopup(tag) {
 }
 
 function ScriptureCloseAndDestroy(){
-	expandedWindow.hide();
-	delete window.expandedWindow;
+	if (expandedWindow) {
+		expandedWindow.hide();
+		delete window.expandedWindow;
+	}
 }
 
 function ScriptureSelectTranslation(tag) {

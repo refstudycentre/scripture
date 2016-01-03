@@ -37,11 +37,18 @@ function ScriptureSelectTranslation(tag) {
 
 
 function ScriptureSelectBook(tag) {
-	var vp = expandedWindow.parent();
-	var trans = tag.children[0].innerText;
-	ScriptureCloseAndDestroy();
+	if (expandedWindow) {
+		var vp = expandedWindow.parent();
+	} else {
+		var vp = jQuery(tag).parents(".verse-picker-style-2");
+	}
+	var bookname = tag.innerText;
+	var booknr = jQuery(tag).attr("value");
 	
-	alert(trans);
+	ScriptureCloseAndDestroy();
+	jQuery(".scripture-book-alt", vp).text(bookname);
+	jQuery(".scripture-book select", vp).val(booknr);
+
 }
 
 /* This function is called after an AJAX update of the book list, which is triggered by selecting a different translation. */
@@ -56,25 +63,30 @@ function ScriptureBookSelector_AfterRefresh()
           .replace(/select/g,"ul")
           .replace(/option/g,"li");
 
-	jQuery(".verse-picker-style-2 .scripture-book select").find(".scripture-book-selector").replaceWith(rep);
+	// get hold of the relevant verse-picker - maybe pass this as a parameter?
+	var vp = jQuery(".verse-picker-style-2 .scripture-book select").parents(".verse-picker-style-2")
+	vp.find(".scripture-book-selector").html(rep);
 		  
 	//remember the previously selected book (numeric - 1..66)
-	selectedBookNr = jQuery(".scripture-book select").val();
+	selectedBookNr = jQuery(".scripture-book select", vp).val();
 	console.log(selectedBookNr);
 	
 	//find the new book name, for the newly selected translation
-	var found = jQuery(".scripture-book-selector li").filter(function(){
+	var found = jQuery(".scripture-book-selector li", vp).filter(function(){
+	  //console.log(this);
 	  //console.log(this.children[0].innerText == selectedBookNr);
-	  return (this.children[0].innerText == selectedBookNr);
+	  return (jQuery(this).attr("value") == selectedBookNr);
 	});
-	console.log(found);
+
+	//console.log(found);
 	//set the book name based on the new translations book names
 	if (found.length > 0) {
-		jQuery("scripture-book-alt").text(found[0].children[1].innerText);
-		jQuery(".scripture-book-selector li").click(function() {
-			jQuery(".scripture-book-selector").hide();
-			jQuery(".scripture-book-alt").text(this.children[1].innerText);
-			jQuery(".scripture-book select").val(this.children[0].innerText);
+		ScriptureSelectBook(found[0]);
+		
+		//restore the ajax on the replaced stuff
+		jQuery(".scripture-book-selector li", vp).click(function(e) {
+			ScriptureSelectBook(this);
+			e.stopPropagation();
 		});
 	}
 }
@@ -114,3 +126,7 @@ jQuery(document).ready(function(){
 	//first page-load:  refresh the book-selector menu
 	ScriptureBookSelector_AfterRefresh();
 });
+
+jQuery.fn.afterajaxbookrefresh = function() {
+	ScriptureBookSelector_AfterRefresh();
+};

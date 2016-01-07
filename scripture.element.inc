@@ -37,6 +37,7 @@ function theme_scripture_verse_picker($variables) {
   $tc = drupal_render($e['to_chapter']);
   $tv = drupal_render($e['to_verse']);
   $s = drupal_render($e['sid']);
+  if ($style==2) $maxdata = drupal_render($e['maxdata']);
   
   # Translation 
   switch ($style) {
@@ -64,7 +65,7 @@ function theme_scripture_verse_picker($variables) {
     case 2 : 
 	  $output .= "<div class='scripture-book element-hidden'>{$b}</div>
 	              <div class='scripture-book-alt'>{$e['book']['#default_value']}</div>
-				  <div class='scripture-book-selector element-hidden'></div>";
+				  <div class='scripture-book-selector element-hidden'></div>{$maxdata}";
 	  break;
 	default :
 	  drupal_set_message('Unknown style {$style} selected, not implemented in Book part', 'error');
@@ -114,6 +115,15 @@ function scripture_ajax_translation_changed_multiple($form, &$form_state) {
 
   return array('#type' => 'ajax', '#commands' => $commands);
 }
+
+
+function scripture_ajax_book_changed_multiple($form, &$form_state) {
+  $commands = array();
+  $commands[] = ajax_command_replace("#".$form_state['#book-verse-max'], '<ul><li>hierkom</li><li>diedata</li></ul>', array());
+  $commands[] = ajax_command_invoke(NULL, 'afterajaxchaptersrefresh', array());
+  return array('#type' => 'ajax', '#commands' => $commands);
+}
+
 
 /**
  * gets called when verse picker element is used in a form
@@ -171,7 +181,10 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
   $element['#tree'] = TRUE;
   
   //only call this the first time...  the "process" hook is called for each ajax call, and the ajax id should be constant over the ajax calls
-  if (empty($form_state['#book-wrapper'])) $form_state['#book-wrapper'] = drupal_html_id('scripture_verse_picker_book');
+  if (empty($form_state['#book-wrapper'])) {
+	  $form_state['#book-wrapper'] = drupal_html_id('scripture_verse_picker_book');
+	  if ($style==2) $form_state['#book-verse-max'] = drupal_html_id('scripture_verse_picker_maxdata');
+  }
 
   $element['translation'] = array(
     '#type' => 'select',
@@ -203,6 +216,19 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
     '#default_value' => $init['book'],
     '#disabled'      => !$settings['allow_book'],
   );
+  
+  if ($style==2) {
+	  /* we need the number of chapters and verse - and we put this in an ajax call here */
+	  $element['book']['#ajax'] = array(
+		'callback' => 'scripture_ajax_book_changed_multiple',
+		'wrapper' => 'wrapper',
+	  ); 
+	  //explicitly add the book-verse-max id in here.
+	  $element['maxdata'] = array(
+								'#markup' => "<div id='{$form_state['#book-verse-max']}' class='scripture-max-data'>hierso kom die maxdata</div>",
+							);
+  }
+  
   
   $element['from_chapter'] = array(
     '#type'           => 'textfield',

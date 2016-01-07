@@ -47,7 +47,7 @@ function ScriptureSelectBook(tag) {
 	
 	ScriptureCloseAndDestroy();
 	jQuery(".scripture-book-alt", vp).text(bookname);
-	jQuery(".scripture-book select", vp).val(booknr);
+	jQuery(".scripture-book select", vp).val(booknr).trigger("change");
 
 }
 

@@ -62,9 +62,9 @@ function theme_scripture_verse_picker($variables) {
 	  $output .= "<div class='scripture-book'>{$b}</div>";
 	  break;
     case 2 : 
-	  $output .= "<div class='scripture-book xelement-hidden'>{$b}</div>
+	  $output .= "<div class='scripture-book element-hidden'>{$b}</div>
 	              <div class='scripture-book-alt'>{$e['book']['#default_value']}</div>
-				  <div class='scripture-book-selector xelement-hidden'></div>";
+				  <div class='scripture-book-selector element-hidden'></div>";
 	  break;
 	default :
 	  drupal_set_message('Unknown style {$style} selected, not implemented in Book part', 'error');

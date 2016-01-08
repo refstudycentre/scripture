@@ -29,10 +29,10 @@ function ScriptureSelectTranslation(tag) {
 	
 	//console.debug(trans);
 	/* get the right verse-picker */
-	vp.find(".scripture-translation-alt").text(trans);
-	var sel = vp.find(".scripture-translation select");
-	sel.val(trans)
-	sel.trigger("change");  //init the ajax ?
+	jQuery(".scripture-translation-alt", vp).text(trans);
+	jQuery(".scripture-translation select", vp)
+	  .val(trans)   //set the value of the select
+	  .trigger("change");  //and trigger the ajax refresh ?
 }
 
 

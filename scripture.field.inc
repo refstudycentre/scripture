@@ -47,15 +47,21 @@ function scripture_field_validate($entity_type, $entity, $field, $instance, $lan
 function scripture_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
 
   foreach ($items as $delta => &$item) {
-    $v = &$item['verse'];
-    
-    // flatten for database
-    $item['translation'] = $v['translation'];
-    $item['from_vid'] = $v['from_vid'];
-    $item['to_vid'] = $v['to_vid'];
+
+    if (isset($item['verse'])) {
+      // A form was displayed, so use the new values
+
+      $v = &$item['verse'];
+
+      // flatten for database
+      $item['translation'] = $v['translation'];
+      $item['from_vid'] = $v['from_vid'];
+      $item['to_vid'] = $v['to_vid'];
+
+    } // else the old (flattened) values should still be present in $item['from_vid'], etc. and we shouldn't clear them
   
   }
-  
+
 }
 
 /*

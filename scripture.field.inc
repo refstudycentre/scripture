@@ -51,7 +51,6 @@ function scripture_field_presave($entity_type, $entity, $field, $instance, $lang
     
     // flatten for database
     $item['translation'] = $v['translation'];
-    $item['sid'] = $v['sid'];
     $item['from_vid'] = $v['from_vid'];
     $item['to_vid'] = $v['to_vid'];
   
@@ -93,7 +92,7 @@ function scripture_field_formatter_info() {
 /**
  * Implements hook_field_formatter_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items, $displays)
  * https://api.drupal.org/api/drupal/modules%21field%21field.api.php/function/hook_field_formatter_prepare_view/7
- * load multiple verses, single verse, or subverse from database, based on settings
+ * load multiple verses or single verse from the database, based on settings
  */
 function scripture_field_formatter_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items, $displays) {
   
@@ -248,7 +247,6 @@ function scripture_field_widget_form(&$form, &$form_state, $field, $instance, $l
         'from_verse' => $from_verse['versenum'],
         'to_chapter' => $to_verse['chapternum'],
         'to_verse' => $to_verse['versenum'],
-        'sid' => $item['sid'],
       );
 
     }

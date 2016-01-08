@@ -225,8 +225,6 @@ function scripture_view($values, $display) {
  */
 function scripture_str_verseref($from_verse, $to_verse, $bookname = NULL, $translation_abbr = NULL) {
   
-  $str = "";
-  
   if (empty($bookname)) {
     $book = scripture_get_book($from_verse);
     $bookname = $book['bookname'];

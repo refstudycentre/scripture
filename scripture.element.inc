@@ -26,10 +26,6 @@ function theme_scripture_verse_picker($variables) {
     }
   }
   
-  if (strlen($s)) {
-    $output .= " ({$s})";
-  }
-  
   $output .= "</div>";
   
   return $output;

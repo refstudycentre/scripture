@@ -69,7 +69,7 @@ function ScriptureBookSelector_AfterRefresh()
 		  
 	//remember the previously selected book (numeric - 1..66)
 	selectedBookNr = jQuery(".scripture-book select", vp).val();
-	console.log(selectedBookNr);
+	//console.log(selectedBookNr);
 	
 	//find the new book name, for the newly selected translation
 	var found = jQuery(".scripture-book-selector li", vp).filter(function(){
@@ -127,6 +127,13 @@ jQuery(document).ready(function(){
 	ScriptureBookSelector_AfterRefresh();
 });
 
-jQuery.fn.afterajaxbookrefresh = function() {
+jQuery.fn.afterajaxbookrefresh = function(bookid) {
+	var vp = jQuery(bookid).parents(".verse-picker-style-2");   //find the triggering verse-picker 
 	ScriptureBookSelector_AfterRefresh();
+
+};
+
+jQuery.fn.afterajaxmaxrefresh = function(maxid) {
+	var vp = jQuery(maxid).parents(".verse-picker-style-2");   //find the triggering verse-picker 
+	//alert("freshed max");
 };

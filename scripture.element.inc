@@ -111,16 +111,20 @@ function scripture_ajax_translation_changed_multiple($form, &$form_state) {
   // Replace the form element.
   $commands[] = ajax_command_replace("#".$form_state['#book-wrapper'], render(scripture_ajax_translation_changed($form, $form_state)), array());
   // Invoke any JavaScript func
-  if ($style==2) $commands[] = ajax_command_invoke(NULL, 'afterajaxbookrefresh', array());
+  if ($style==2) $commands[] = ajax_command_invoke(NULL, 'afterajaxbookrefresh', array('#'.$form_state['#book-wrapper']));
 
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
 
 function scripture_ajax_book_changed_multiple($form, &$form_state) {
+  $wrap = $form_state['#book-verse-max']; 
+  $trans = $form['verse']['#value']['translation'];
+  $book = $form['verse']['#value']['book'];
+
   $commands = array();
-  $commands[] = ajax_command_replace("#".$form_state['#book-verse-max'], '<ul><li>hierkom</li><li>diedata</li></ul>', array());
-  $commands[] = ajax_command_invoke(NULL, 'afterajaxchaptersrefresh', array());
+  $commands[] = ajax_command_replace("#{$wrap}", "<div id='{$wrap}'><ul><li>{$trans}</li><li>{$book}</li></ul></div>", array());
+  $commands[] = ajax_command_invoke(NULL, 'afterajaxmaxrefresh', array('#'.$wrap));
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 

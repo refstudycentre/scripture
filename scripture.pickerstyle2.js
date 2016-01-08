@@ -131,6 +131,9 @@ jQuery.fn.afterajaxbookrefresh = function(bookid) {
 	var vp = jQuery(bookid).parents(".verse-picker-style-2");   //find the triggering verse-picker 
 	ScriptureBookSelector_AfterRefresh();
 
+	// this is supposed to fire the ajax that refreshes 
+	jQuery(".scripture-book select", vp).trigger("change");  //also trigger the maximum data refresh
+
 };
 
 jQuery.fn.afterajaxmaxrefresh = function(maxid) {

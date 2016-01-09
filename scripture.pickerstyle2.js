@@ -211,6 +211,12 @@ function SetChapterVersMode(vp, mode) {
 	if (mode==1) {
 		chap.addClass("activepane");
 		vers.removeClass("activepane");
+
+		// automatically select the only chapter if there is one only.
+		var count = jQuery("td", chap);
+		if (count.length==1) {
+			ScriptureSelectChapter(count[0]);
+		}
 	} else {
 		chap.removeClass("activepane");
 		vers.addClass("activepane");

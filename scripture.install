@@ -135,49 +135,6 @@ function scripture_schema() {
         ),
       ),
     ),
-    'lw_subverses' => array(
-      'description' => 'Subdivision of Bible verses',
-      'fields' => array(
-        'vid' => array(
-          'description' => 'verse ID; unique within translation; all verses with this ID has the same textual content, but in different translations',
-          'type' => 'int',
-          'not null' => true,
-          'unsigned' => true,
-        ),
-        'translation' => array(
-          'description' => 'Bible translation the containing verse originates from',
-          'type' => 'varchar',
-          'length' => 8,
-          'not null' => true,
-        ),
-        'sid' => array(
-          'description' => 'Subverse id; unique within the verse; "a","b","c", etc.',
-          'type' => 'varchar',
-          'not null' => true,
-          'length' => 1,
-        ),
-        'text' => array(
-          'description' => 'The relevant part of the verse text',
-          'type' => 'text',
-          'not null' => true,
-          // collation is utf8_general_ci by default
-        ),
-      ),
-      'primary key' => array('vid','translation','sid'),
-      'foreign keys' => array(
-        'part_of_verse' => array(
-          'table' => 'lw_verses',
-          'columns' => array(
-            'vid'=>'vid',
-            'translation'=>'translation',
-          ),
-        ),
-        'in_translation' => array(
-          'table' => 'lw_translations',
-          'columns' => array('translation'=>'abbr'),
-        ),
-      ),
-    ),
   );
 }
 
@@ -199,13 +156,6 @@ function scripture_field_schema($field) {
         'type' => 'int',
         'not-null' => true,
         'unsigned' => true,
-      ),
-      'sid' => array(
-        'description' => 'Optional subverse (only allowed when from_vid==to_vid)',
-        'type' => 'varchar',
-        'length' => 1,
-        'not-null' => false,
-        'default' => NULL,
       ),
     ),
   );

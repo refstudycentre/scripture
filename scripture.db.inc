@@ -53,92 +53,6 @@ function scripture_get_verse($vid, $translation = NULL) {
 }
 
 /**
- * Retrieve subverses from the db based on vid
- */
-function scripture_get_subverses($vid, $translation = NULL) {
-  if (empty($translation))
-    $translation = variable_get('scripture_default_translation', NULL);
-
-  if (!empty($translation)) {
-    $result = db_select('lw_subverses', 's')->fields('s')->condition('vid', $vid)->condition('translation', $translation)->execute()->fetchAllAssoc('sid');
-    return empty($result) ? array() : $result;
-  } else {
-    return array();
-  }
-}
-
-/**
- * Retrieve a subverse from the db based on vid and sid
- */
-function scripture_get_subverse($vid, $sid, $translation = NULL) {
-  if (empty($translation))
-    $translation = variable_get('scripture_default_translation', NULL);
-
-  if (!empty($translation)) {
-    return db_select('lw_subverses', 's')
-      ->fields('s',array('text'))
-      ->condition('vid', $vid)
-      ->condition('sid', $sid)
-      ->condition('translation', $translation)
-      ->range(0, 1)
-      ->execute()
-      ->fetchField();
-  }
-  
-  return FALSE;
-}
-
-/**
- * Check if subverse exists in database.
- */
-function scripture_subverse_exists($vid, $sid, $translation = NULL) {
-  if (empty($translation))
-    $translation = variable_get('scripture_default_translation', NULL);
-
-  if (!empty($translation)) {
-    return db_select('lw_subverses', 's')
-      ->fields('s',array('text'))
-      ->condition('vid', $vid)
-      ->condition('sid', $sid)
-      ->condition('translation', $translation)
-      ->range(0, 1)
-      ->execute()
-      ->rowCount() > 0;
-  }
-  
-  return FALSE;
-}
-
-/**
- * Delete one or more subverses for a specific verse from a specific translation from the db
- * Returns number of deleted records or FALSE on failure
- */
-function scripture_delete_subverses($vid, $translation, $sids) {
-  if (!empty($translation) && !empty($vid) && is_array($sids)) {
-    return db_delete('lw_subverses')
-      ->condition('vid', $vid)
-      ->condition('translation', $translation)
-      ->condition('sid', $sids, 'IN')
-      ->execute();
-  } else {
-    return FALSE;
-  }
-}
-
-/**
- * Add one or more subverses for a specific verse from a specific translation to the db
- */
-function scripture_save_subverses($vid, $translation, $new) {
-  if (!empty($translation) && !empty($vid) && is_array($new)) {
-    $query = db_insert('lw_subverses')->fields(array('vid', 'translation', 'sid', 'text'));
-    foreach ($new as $n) {
-      $query->values(array($vid, $translation, $n['sid'], $n['text']));
-    }
-    $query->execute();
-  }
-}
-
-/**
  * Retrieve all verses in a range from the db based on vid
  */
 function scripture_get_verses_between($from_vid, $to_vid, $translation = NULL) {
@@ -219,44 +133,32 @@ function scripture_get_book($verse) {
 /**
  * Get nodes which reference the given verse range
  */
-function scripture_get_nodes($from_vid, $to_vid = NULL, $sid = NULL) {
+function scripture_get_nodes($from_vid, $to_vid = NULL) {
 
-  if (empty($sid)) {
+  if (empty($to_vid)) {
 
-    // subverse has not been specified. use verse range or single verse
+    // single verse
+    $to_vid = $from_vid;
 
-    if (empty($to_vid)) {
+  } else {
 
-      // single verse
-      $to_vid = $from_vid;
+    // verse range
+    if ($to_vid < $from_vid) {
 
-    } else {
-
-      // verse range
-      if ($to_vid < $from_vid) {
-
-        // error: negative verse range...
-        return FALSE;
-
-      }
+      // error: negative verse range...
+      return FALSE;
 
     }
 
-    // TODO: we need some way to quickly inspect all fields of type "Scripture reference"
+  }
+
+  // TODO: we need some way to quickly inspect all fields of type "Scripture reference"
 
 //    $query = new EntityFieldQuery();
 //    $query
 //      ->entityCondition('entity_type', 'node')
 //      ->propertyConfition('status', NODE_PUBLISHED)
 //      ->fieldConfition('')
-
-  } else {
-
-    // subverse has been specified, so ignore $to_vid
-    // TODO: write query
-    return array();
-
-  }
 
 }
 

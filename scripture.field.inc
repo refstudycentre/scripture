@@ -48,16 +48,21 @@ function scripture_field_validate($entity_type, $entity, $field, $instance, $lan
 function scripture_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
 
   foreach ($items as $delta => &$item) {
-    $v = &$item['verse'];
-    
-    // flatten for database
-    $item['translation'] = $v['translation'];
-    $item['sid'] = $v['sid'];
-    $item['from_vid'] = $v['from_vid'];
-    $item['to_vid'] = $v['to_vid'];
+
+    if (isset($item['verse'])) {
+      // A form was displayed, so use the new values
+
+      $v = &$item['verse'];
+
+      // flatten for database
+      $item['translation'] = $v['translation'];
+      $item['from_vid'] = $v['from_vid'];
+      $item['to_vid'] = $v['to_vid'];
+
+    } // else the old (flattened) values should still be present in $item['from_vid'], etc. and we shouldn't clear them
   
   }
-  
+
 }
 
 /*
@@ -94,7 +99,7 @@ function scripture_field_formatter_info() {
 /**
  * Implements hook_field_formatter_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items, $displays)
  * https://api.drupal.org/api/drupal/modules%21field%21field.api.php/function/hook_field_formatter_prepare_view/7
- * load multiple verses, single verse, or subverse from database, based on settings
+ * load multiple verses or single verse from the database, based on settings
  */
 function scripture_field_formatter_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items, $displays) {
   
@@ -249,7 +254,6 @@ function scripture_field_widget_form(&$form, &$form_state, $field, $instance, $l
         'from_verse' => $from_verse['versenum'],
         'to_chapter' => $to_verse['chapternum'],
         'to_verse' => $to_verse['versenum'],
-        'sid' => $item['sid'],
       );
 
     }

@@ -33,7 +33,7 @@ function scripture_permission() {
   
   $permissions['scripture_admin'] = array(
     'title' => t('Scripture admin'),
-    'description' => t('Administer translations and subverses of the Scripture module'),
+    'description' => t('Administer the Scripture module'),
     'restrict access' => TRUE,
   );
 
@@ -97,18 +97,6 @@ function scripture_menu() {
     'file'             => 'scripture.admin.inc',
   );
   
-  $items['admin/structure/scripture/subverses'] = array(
-    'title'            => 'Subverses',
-    'description'      => 'Manage subverses',
-    'type'             => MENU_LOCAL_TASK,
-    'weight'           => 30,
-    'page callback'    => 'drupal_get_form',
-    'page arguments'   => array('scripture_callback_subverses'),
-    'access callback'  => 'user_access',
-    'access arguments' => array('scripture_admin'),
-    'file'             => 'scripture.admin.inc',
-  );
-
   $items['scripture/%'] = array(
     'title'            => 'Content by scripture',
     'page callback'    => 'scripture_callback_node_listing',
@@ -178,11 +166,6 @@ function scripture_prepare(&$values, $display) {
     $values['all_verses'] = scripture_get_verses_between($values['from_vid'], $values['to_vid'], $values['translation']);
   }
   
-  if (SCRIPTURE_SHOW_TEXT_NO != $display['show_text'] && !empty($values['sid'])) {
-    // load the subverse
-    $values['subverse'] = scripture_get_subverse($values['from_vid'], $values['sid'], $values['translation']);
-  }
-  
 }
 
 /**
@@ -200,19 +183,14 @@ function scripture_view($values, $display) {
     if ($display['show_ref']) {
       $output['ref'] = array(
         '#prefix' => '<cite>',
-        '#markup' => scripture_str_verseref($values['from_verse'], $values['to_verse'], $values['sid'], NULL, $values['translation']),
+        '#markup' => scripture_str_verseref($values['from_verse'], $values['to_verse'], NULL, $values['translation']),
         '#suffix' => '</cite>'
       );
     }
 
     switch ($display['show_text']) {
       case SCRIPTURE_SHOW_TEXT_TRUNC:
-        // if there is a subverse, show only that
-        if (!empty($values['subverse'])) {
-          $markup = $values['subverse'];
-        } else {
-          $markup = scripture_shorten($values['from_verse']['versetext'], $values['to_verse']['versetext']);
-        }
+        $markup = scripture_shorten($values['from_verse']['versetext'], $values['to_verse']['versetext']);
         $output['text'] = array(
           '#prefix' => '<q>',
           '#markup' => $markup,
@@ -225,12 +203,6 @@ function scripture_view($values, $display) {
         $alltext = "";
         foreach ($values['all_verses'] as $v) {
           $alltext .= $v->versetext . " ";
-        }
-
-        // if there is a subverse, emphasize it
-        if (!empty($values['subverse'])) {
-          // find the subverse and surround it with tags
-          $alltext = str_replace($values['subverse'], "<strong>{$values['subverse']}</strong>", $alltext);
         }
 
         $output['text'] = array(
@@ -251,9 +223,7 @@ function scripture_view($values, $display) {
 /**
  * Generate a human-readable verse range
  */
-function scripture_str_verseref($from_verse, $to_verse, $sid = NULL, $bookname = NULL, $translation_abbr = NULL) {
-  
-  $str = "";
+function scripture_str_verseref($from_verse, $to_verse, $bookname = NULL, $translation_abbr = NULL) {
   
   if (empty($bookname)) {
     $book = scripture_get_book($from_verse);
@@ -261,11 +231,7 @@ function scripture_str_verseref($from_verse, $to_verse, $sid = NULL, $bookname =
   }
 
   if ($from_verse['vid'] == $to_verse['vid']) {
-    if (empty($sid)) {
-      $str = "{$bookname} {$from_verse['chapternum']}:{$from_verse['versenum']}";
-    } else {
-      $str = "{$bookname} {$from_verse['chapternum']}:{$from_verse['versenum']}.{$sid}";
-    }
+    $str = "{$bookname} {$from_verse['chapternum']}:{$from_verse['versenum']}";
   } else {
     $str = "{$bookname} {$from_verse['chapternum']}:{$from_verse['versenum']} - {$to_verse['chapternum']}:{$to_verse['versenum']}";
   }
@@ -315,7 +281,7 @@ function scripture_preview($values, $display = array()) {
 /**
  * Provide a measure of quality of match, given the verse range for a node and the verse range for a query
  */
-function scripture_match_quality($field_start_vid, $field_end_vid, $node_sid = NULL, $query_start_vid, $query_end_vid, $query_sid = NULL) {
+function scripture_match_quality($field_start_vid, $field_end_vid, $query_start_vid, $query_end_vid) {
 
   static $weight_q;
   static $weight_e;
@@ -324,8 +290,6 @@ function scripture_match_quality($field_start_vid, $field_end_vid, $node_sid = N
     $weight_q = variable_get("scripture_match_quality_weight_query", 1);
     $weight_e = variable_get("scripture_match_quality_weight_entity", 1);
   }
-
-  // TODO: support subverses?
 
   // FIXME: using the verse ids is crude, because they are not gauranteed to be equally spaced. Although in general, they are.
 
@@ -342,17 +306,15 @@ function scripture_match_quality($field_start_vid, $field_end_vid, $node_sid = N
  * Decode a verse range represented as a string into a
  * - starting vid
  * - stopping vid
- * - subverse id
  */
 function scripture_decode_range($str) {
 
   $from_vid = NULL;
   $to_vid = NULL;
-  $sid = NULL;
 
   $matches = array();
-  if (preg_match('/^(\d+)(-(\d+)|\.(\w))?$/', $str, $matches)) {
-    // looks like the right shape, i.e. either 1234 or 1234-5678 or 1234b
+  if (preg_match('/^(\d+)(-(\d+))?$/', $str, $matches)) {
+    // looks valid, i.e. either 1234 or 1234-5678
 
     if (!empty($matches[1])) {
 
@@ -367,11 +329,6 @@ function scripture_decode_range($str) {
         // use the starting verse for the ending verse
         $to_vid = $from_vid;
 
-        // check for sid
-        if (!empty($matches[4])) {
-          $sid = $matches[4];
-        }
-
       }
 
     } // else invalid starting verse
@@ -381,7 +338,6 @@ function scripture_decode_range($str) {
   return array(
     'from_vid' => $from_vid,
     'to_vid'   => $to_vid,
-    'sid'      => $sid,
   );
 
 }

@@ -36,7 +36,6 @@ function theme_scripture_verse_picker($variables) {
   $fv = drupal_render($e['from_verse']);
   $tc = drupal_render($e['to_chapter']);
   $tv = drupal_render($e['to_verse']);
-  $s = drupal_render($e['sid']);
   if ($style==2) $maxdata = drupal_render($e['maxdata']);
   
   # Translation 
@@ -80,10 +79,6 @@ function theme_scripture_verse_picker($variables) {
     } else {
       $output .= " - {$tv}";
     }
-  }
-  
-  if (strlen($s)) {
-    $output .= " ({$s})";
   }
   
   $output .= "</div></div>";
@@ -144,7 +139,6 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
     'allow_translation'   => TRUE,  // translation cannot be edited if FALSE
     'allow_book'          => TRUE,  // book cannot be edited if FALSE
     'allow_range'         => TRUE,  // only a single verse may be selected if FALSE
-    'allow_subverse'      => TRUE,  // sid field is hidden if FALSE
   );
 
   // Default values to populate element
@@ -157,7 +151,6 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
     'from_verse' => '',
     'to_chapter' => '',
     'to_verse' => '',
-    'sid' => '',
   );
 
   // Options for select lists
@@ -280,25 +273,11 @@ function scripture_verse_picker_process($element, &$form_state, $complete_form) 
     '#theme_wrappers' => array('scripture_inline_wrapper'),
   );
     
-  // TODO: hide this field (using AJAX?) if a range of verses is specified
-  $element['sid'] = array(
-    '#type'           => 'textfield',
-    '#title'          => t('Subverse'),
-    '#size'           => 1,
-    '#maxlength'      => 3,
-    '#required'       => false,
-    '#default_value'  => $init['sid'],
-    '#access'         => $settings['allow_subverse'],
-    '#title_display'  => 'invisible',
-    '#theme_wrappers' => array('scripture_inline_wrapper'),
-  );
-  
   if ($settings['allow_range']) {
     $element['from_chapter']['#title'] = t('From chapter');
     $element['from_chapter']['#description'] = t('First chapter in the range.');
     $element['from_verse']['#title'] = t('From verse');
     $element['from_verse']['#description'] = t('First verse in the range.');
-    $element['sid']['#description'] = t('This will be ignored if the first and last verses and chapters are not the same.');
   } else {
     $element['from_chapter']['#title'] = t('Chapter');
     $element['from_verse']['#title'] = t('Verse');
@@ -413,19 +392,6 @@ function scripture_verse_picker_validate($element, &$form_state) {
       $errors = TRUE;
     }
     
-    // check whether the range is a single verse
-    if (empty($v['sid']) || $v['to_vid'] != $v['from_vid']) {
-      $v['sid'] = NULL;
-    }
-    
-  }
-    
-  if (!$errors && !empty($v['sid'])) {
-    if (!scripture_subverse_exists($v['from_vid'], $v['sid'], $v['translation'])) {
-      // The subverse does not exist
-      form_error($element, t('Requested subverse does not exist.'));
-      $errors = TRUE;
-    }
   }
   
   // update the form state with the new values

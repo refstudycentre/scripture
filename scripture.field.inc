@@ -228,7 +228,8 @@ function scripture_field_widget_form(&$form, &$form_state, $field, $instance, $l
   $element['#type'] = 'fieldset'; // just to show the title and put a nice frame around it
   
   $element['verse'] = array(
-    '#type' => 'scripture_verse_picker',
+    '#type'     => 'scripture_verse_picker',
+    '#required' => $instance['required'],
   );
 
   $item = &$items[$delta];

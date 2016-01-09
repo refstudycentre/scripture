@@ -229,7 +229,7 @@ function scripture_field_widget_form(&$form, &$form_state, $field, $instance, $l
   
   $element['verse'] = array(
     '#type'     => 'scripture_verse_picker',
-    '#required' => $instance['required'],
+    '#required' => $instance['required'] && $delta == 0, // only the first field item should be required
   );
 
   $item = &$items[$delta];

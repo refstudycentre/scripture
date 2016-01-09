@@ -86,9 +86,7 @@ function theme_scripture_verse_picker($variables) {
 	case 2 :
 	  $output .= "<div class='scripture-verse xelement-hidden'>{$fc} : ${fv} - {$tc} : {$tv}</div>
 	              <div class='scripture-chapter-alt'>{$e['from_chapter']['#default_value']}</div>
-	              <div class='scripture-chapter-selector element-hidden'></div>
-				  <div class='scripture-verse-alt'>{$e['from_verse']['#default_value']}</div>
-				  <div class='scripture-verse-selector element-hidden'></div>";
+	              <div class='scripture-chapter-selector element-hidden'></div>";
 	  break;
 	default :
 	  drupal_set_message('Unknown style {$style} selected, not implemented in Book part', 'error');
@@ -125,7 +123,7 @@ function scripture_ajax_getmaxdata($form, &$form_state) {
   foreach ($rst as $row) {
 		$content .= "<div class='scripture-chapter-max-verse' chapter='{$row->chapternum}'>{$row->MaxVers}</div>";
   }
-  return "<div id='{$wrap}' class='element-hidden'>{$content}</div>";
+  return "<div id='{$wrap}' class='scripture-maxdata element-hidden'>{$content}</div>";
 }
 
 function scripture_ajax_translation_changed_multiple($form, &$form_state) {

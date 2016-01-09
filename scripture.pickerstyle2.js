@@ -56,6 +56,47 @@ function ScriptureSelectBook(tag) {
 
 }
 
+var ScriptureVerseStartMouseDown;
+var ScriptureVerses = [];  //javascript array for better handling of the verses
+
+function ScriptureCacheVerseObjects(verstable)
+{
+	//save the <td>'s of the relevant verses into a local array
+	var xx = jQuery("td", verstable);
+    for (i=0; i<xx.length; i++) {
+		versnr = xx[i].innerText;
+		ScriptureVerses[versnr - 1] = jQuery(xx[i]);
+	}
+	
+	//for (i=0; i<xx.length; i++) console.log(ScriptureVerses[i].html());
+}
+
+function ScriptureHighlightVersRange(vp, element1, element2)
+{
+	var v1 = parseInt(element1.innerText);
+	var v2 = parseInt(element2.innerText);
+	
+	if (v1 > v2) {  //swop the variables around
+		vx = v1;
+		v1 = v2;
+		v2 = vx;
+	}
+	//remove highlights - not sure if that will mess around with the screen - maybe
+	ScriptureVerses[0].parents("table").find(".selected").removeClass("selected");
+
+	for (i=v1; i<=v2; i++) {
+		ScriptureVerses[i - 1].addClass("selected");
+	}
+	
+	//console.log('xx: ',v1,' x ', v2);
+	jQuery("#edit-verse-from-verse", vp).val(v1);   /* save this in the underlying fields */
+	jQuery("#edit-verse-to-verse", vp).val(v2);   /* save this in the underlying fields */
+
+	var label = jQuery("#edit-verse-from-chapter", vp).val().concat(":", v1);
+	if (v2!=v1) label = label.concat("-", v2);
+	jQuery(".scripture-chapter-alt", vp).text(label);
+}
+
 function ScriptureSelectChapter(tag) {
 	var clicked = jQuery(tag);
 	var vp = clicked.parents(".verse-picker-style-2");
@@ -67,16 +108,34 @@ function ScriptureSelectChapter(tag) {
 	jQuery(".scripture-chapter-alt", vp).text(chapternr);
 	//alert(chapternr);
     
-	jQuery(".scripture-verse-picker-verse-table", vp).html(ScriptureBuildVerseTable(vp, chapternr));
+	verstable = jQuery(".scripture-verse-picker-verse-table", vp);
+	verstable.html(ScriptureBuildVerseTable(vp, chapternr));
+	ScriptureCacheVerseObjects(verstable);
 	SetChapterVersMode(vp, 2);  //now verse mode
 	
 	//hook the verse-selector
-	jQuery(".scripture-verse-picker-verse-table td", vp).click(function(e) {
+/*	jQuery(".scripture-verse-picker-verse-table td", vp).click(function(e) {
 		ScriptureSelectVers(this);
 		e.stopPropagation();
+	}); */
+
+	jQuery(".scripture-verse-picker-verse-table td", vp).bind('mousedown', function(e){
+		ScriptureVerseStartMouseDown = e.currentTarget;
+		ScriptureHighlightVersRange(vp, ScriptureVerseStartMouseDown, ScriptureVerseStartMouseDown);
+		jQuery(".scripture-verse-picker-verse-table td", vp).bind('mousemove', function(e){
+			/* do something like range-select setting of "selected" class */
+			
+			ScriptureHighlightVersRange(vp, ScriptureVerseStartMouseDown, e.currentTarget);
+			e.stopPropagation();
+		});
+
+		jQuery(".scripture-verse-picker-verse-table td", vp).bind('mouseup',function(e){
+			ScriptureHighlightVersRange(vp, ScriptureVerseStartMouseDown, e.currentTarget);
+			ScriptureCloseAndDestroy();
+			jQuery(".scripture-verse-picker-verse-table td", vp).unbind('mousemove')
+		});
+		e.stopPropagation();
 	});
-	
-	
 }
 
 function ScriptureSelectVers(tag) {

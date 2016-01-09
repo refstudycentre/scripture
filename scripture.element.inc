@@ -102,8 +102,17 @@ function scripture_ajax_getmaxdata($form, &$form_state) {
   $trans = $form['verse']['#value']['translation'];
   $book = $form['verse']['#value']['book'];
 
-  //TODO: replaced by real max data
-  return "<div id='{$wrap}'><ul><li>{$trans}</li><li>{$book}</li></ul></div>";
+  $rst = db_query("SELECT chapternum, max(versenum + 0) as MaxVers
+				   FROM lw_verses
+				   WHERE translation=:trans and booknum=:book
+				   GROUP BY chapternum", array(
+				     ':trans' => $trans, 
+				     ':book' => $book));
+  $content = ''; //$trans."x".$book;
+  foreach ($rst as $row) {
+		$content .= "<div class='scripture-chapter-max-verse' chapter='{$row->chapternum}'>{$row->MaxVers}</div>";
+  }
+  return "<div id='{$wrap}' class='element-hidden'>{$content}</div>";
 }
 
 function scripture_ajax_translation_changed_multiple($form, &$form_state) {

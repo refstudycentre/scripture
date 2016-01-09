@@ -51,6 +51,22 @@ function ScriptureSelectBook(tag) {
 
 }
 
+function ScriptureSelectChapter(tag) {
+	var vp = jQuery(tag).parents(".verse-picker-style-2");
+	ScriptureCloseAndDestroy();
+
+	alert(tag);
+}
+
+
+function ScriptureSelectVerse(tag) {
+	var vp = jQuery(tag).parents(".verse-picker-style-2");
+	ScriptureCloseAndDestroy();
+
+	alert(tag);
+}
+
+
 /* This function is called after an AJAX update of the book list, which is triggered by selecting a different translation. */
 
 function ScriptureBookSelector_AfterRefresh()
@@ -97,7 +113,7 @@ function ScriptureBookSelector_AfterRefresh()
 /* The init for the first page load */
 
 jQuery(document).ready(function(){
-	jQuery(".scripture-translation-alt, .scripture-book-alt").click(function (e) {
+	jQuery(".scripture-translation-alt, .scripture-book-alt, .scripture-chapter-alt, .scripture-verse-alt").click(function (e) {
 		ScriptureShowPopup(this);
 		e.stopPropagation();
 	});
@@ -111,6 +127,17 @@ jQuery(document).ready(function(){
 		ScriptureSelectBook(this);
 		e.stopPropagation();
 	});
+	
+	jQuery(".scripture-chapter-selector li").click(function(e) {
+		ScriptureSelectChapter(this);
+		e.stopPropagation();
+	});
+
+	jQuery(".scripture-verse-selector li").click(function(e) {
+		ScriptureSelectVerse(this);
+		e.stopPropagation();
+	});
+	
 	
 	jQuery(document).keyup(function(e) {
 		if ((expandedWindow) && (e.keyCode == 27)) ScriptureCloseAndDestroy(); // esc pressed - cancel the window

@@ -229,7 +229,8 @@ function scripture_field_widget_form(&$form, &$form_state, $field, $instance, $l
   $element['#type'] = 'fieldset'; // just to show the title and put a nice frame around it
   
   $element['verse'] = array(
-    '#type' => 'scripture_verse_picker',
+    '#type'     => 'scripture_verse_picker',
+    '#required' => $instance['required'] && $delta == 0, // only the first field item should be required
   );
 
   $item = &$items[$delta];

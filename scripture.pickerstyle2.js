@@ -56,7 +56,7 @@ function ScriptureSelectBook(tag) {
 
 }
 
-var ScriptureVerseStartMouseDown;
+// var ScriptureVerseStartMouseDown;
 var ScriptureVerses = [];  //javascript array for better handling of the verses
 
 function ScriptureCacheVerseObjects(verstable)
@@ -113,12 +113,7 @@ function ScriptureSelectChapter(tag) {
 	ScriptureCacheVerseObjects(verstable);
 	SetChapterVersMode(vp, 2);  //now verse mode
 	
-	//hook the verse-selector
-/*	jQuery(".scripture-verse-picker-verse-table td", vp).click(function(e) {
-		ScriptureSelectVers(this);
-		e.stopPropagation();
-	}); */
-
+	//hook the verse-selector events (range-selectable)
 	jQuery(".scripture-verse-picker-verse-table td", vp).bind('mousedown', function(e){
 		ScriptureVerseStartMouseDown = e.currentTarget;
 		ScriptureHighlightVersRange(vp, ScriptureVerseStartMouseDown, ScriptureVerseStartMouseDown);
@@ -226,6 +221,9 @@ function SetChapterVersMode(vp, mode) {
 			scrollLeft: offset.left - 20
 		}); 
 	}
+
+	
+	
 }
 
 

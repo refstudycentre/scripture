@@ -97,29 +97,39 @@ function theme_scripture_inline_wrapper($var) {
   return "<span title='{$tooltip}'>{$var['element']['#children']}</span>";
 }
 
+function scripture_ajax_getmaxdata($form, &$form_state) {
+  $wrap = $form_state['#book-verse-max']; 
+  $trans = $form['verse']['#value']['translation'];
+  $book = $form['verse']['#value']['book'];
+
+  //TODO: replaced by real max data
+  return "<div id='{$wrap}'><ul><li>{$trans}</li><li>{$book}</li></ul></div>";
+}
 
 function scripture_ajax_translation_changed_multiple($form, &$form_state) {
   $style = $form_state['#style'];
   if (empty($style)) $style = 1;
+  $wrapb = '#'.$form_state['#book-wrapper'];
+  $wrapm = '#'.$form_state['#book-verse-max']; 
   
   $commands = array();
-  // Replace the form element.
-  $commands[] = ajax_command_replace("#".$form_state['#book-wrapper'], render(scripture_ajax_translation_changed($form, $form_state)), array());
+  $commands[] = ajax_command_replace($wrapb, render(scripture_ajax_translation_changed($form, $form_state)), array());
   // Invoke any JavaScript func
-  if ($style==2) $commands[] = ajax_command_invoke(NULL, 'afterajaxbookrefresh', array('#'.$form_state['#book-wrapper']));
-
+  if ($style==2) { 
+	$commands[] = ajax_command_invoke(NULL, 'afterajaxbookrefresh', array($wrapb));
+    $commands[] = ajax_command_replace($wrapm, scripture_ajax_getmaxdata($form, $form_state), array());
+    $commands[] = ajax_command_invoke(NULL, 'afterajaxmaxrefresh', array($wrapm));
+  }
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
 
 function scripture_ajax_book_changed_multiple($form, &$form_state) {
-  $wrap = $form_state['#book-verse-max']; 
-  $trans = $form['verse']['#value']['translation'];
-  $book = $form['verse']['#value']['book'];
+  $wrap = '#'.$form_state['#book-verse-max']; 
 
   $commands = array();
-  $commands[] = ajax_command_replace("#{$wrap}", "<div id='{$wrap}'><ul><li>{$trans}</li><li>{$book}</li></ul></div>", array());
-  $commands[] = ajax_command_invoke(NULL, 'afterajaxmaxrefresh', array('#'.$wrap));
+  $commands[] = ajax_command_replace($wrap, scripture_ajax_getmaxdata($form, $form_state), array());
+  $commands[] = ajax_command_invoke(NULL, 'afterajaxmaxrefresh', array($wrap));
   return array('#type' => 'ajax', '#commands' => $commands);
 }
 
